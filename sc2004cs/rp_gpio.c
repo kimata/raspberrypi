@@ -35,7 +35,7 @@ void rp_gpio_init()
 
     fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (fd == -1) {
-        printf("ERROR: cannot open /dev/mem (at %s:%d)\n", __FILE__, __LINE__);
+        fprintf(stderr, "ERROR: cannot open /dev/mem (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -45,7 +45,7 @@ void rp_gpio_init()
     close(fd);
 
     if ((int32_t)gpio_map == -1) {
-        printf("ERROR: cannot map /dev/mem (at %s:%d)\n", __FILE__, __LINE__);
+        fprintf(stderr, "ERROR: cannot map /dev/mem (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
     gpio_reg = (uint32_t *) gpio_map;
@@ -54,7 +54,7 @@ void rp_gpio_init()
 void rp_gpio_set_mode(uint8_t pin_no, rp_gpio_mode_t mode)
 {
     if (pin_no > 27) {
-        printf("ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
+        fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -68,7 +68,7 @@ void rp_gpio_set_mode(uint8_t pin_no, rp_gpio_mode_t mode)
 void rp_gpio_set_output(uint8_t pin_no, uint8_t level)
 {
     if (pin_no > 27) {
-        printf("ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
+        fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
     if (level == 0) {

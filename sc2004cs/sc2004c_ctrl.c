@@ -27,9 +27,8 @@ static sc2004c_gpio_assign_t setting;
 
 void sc2004c_wait(struct timespec *time)
 {
-    uint32_t i;
     uint32_t nsec = (uint32_t)time->tv_nsec;
-    for (i = 0; i < nsec; i++) {
+    for (uint32_t i = 0; i < nsec; i++) {
         __asm__ volatile("nop");
     }
 }
@@ -113,6 +112,7 @@ void sc2004c_print(const char *str)
 {
     uint8_t i;
     unsigned char c;
+
     i = 0;
     while ((c = (unsigned char)str[i++]) != '\0') {
         sc2004c_putc(c);
@@ -133,7 +133,7 @@ void sc2004c_set_pos(uint8_t line, uint8_t offset)
     case 2: addr = 0x14; break;
     case 3: addr = 0x54; break;
     default:
-        printf("ERROR: line exceeds 3 (at %s:%d)\n", __FILE__, __LINE__);
+        fprintf(stderr, "ERROR: line exceeds 3 (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
