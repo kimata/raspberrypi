@@ -6,13 +6,13 @@
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, version 2.
 
-LIB     	:= libsc2004c_ctrl.a
-LIB_SRCS  	:= sc2004c_ctrl.c rp_gpio.c
+LIB     	:= libadt7410_ctrl.a
+LIB_SRCS  	:= rp_i2c.c adt7410_ctrl.c
 
-TEST_APP	:= sc2004cs.test
+TEST_APP	:= adt7410.test
 TEST_SRC	:= test.c
 
-CFLAGS 		:= -Wall -Wextra -std=c99 -O3 -fPIC -pipe
+CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O0
 LDFLAGS 	:= -Wall
 
 lib: $(LIB)
