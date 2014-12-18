@@ -19,6 +19,7 @@
 #include "rp_gpio.h"
 
 // BCM2835 ARM Peripherals 
+// http://www.raspberrypi.org/wp-content/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
 // 1.2 Address map
 #define PERI_BASE   0x20000000
 #define GPIO_OFF    0x200000
