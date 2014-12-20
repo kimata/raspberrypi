@@ -29,8 +29,27 @@ static int rp_irq_file_open(const char *path, int flags)
     return fd;
 }
 
-static rp_irq_stat_t
-    ret = read(handle->fd, &stat, 1);
+static int rp_irq_open_stat(uint8_t pin_no)
+{
+    int fd;
+    char pin_val_path[sizeof("/sys/class/gpio/gpioXX/value")];
+
+    if (pin_no > 27) {
+        fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+
+    snprintf(pin_val_path, sizeof(pin_val_path), "/sys/class/gpio/gpio%d/value", pin_no);
+
+    return rp_irq_file_open(pin_val_path, O_RDONLY);
+}
+
+static rp_irq_stat_t rp_irq_read_stat(int fd)
+{
+    char stat;
+    int ret;
+
+    ret = read(fd, &stat, 1);
     if (ret != 1) {
         fprintf(stderr, "ERROR: read (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
@@ -43,6 +62,7 @@ static rp_irq_stat_t
         fprintf(stderr, "ERROR: invalid stat (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
+}
 
 
 void rp_irq_enable(uint8_t pin_no, rp_irq_edge_mode_t mode)
@@ -107,16 +127,8 @@ void rp_irq_disable(uint8_t pin_no)
 void rp_irq_init(uint8_t pin_no, rp_irq_handle_t *handle)
 {
     int fd;
-    char pin_val_path[sizeof("/sys/class/gpio/gpioXX/value")];
 
-    if (pin_no > 27) {
-        fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
-    }
-
-    snprintf(pin_val_path, sizeof(pin_val_path), "/sys/class/gpio/gpio%d/value", pin_no);
-
-    fd = rp_irq_file_open(pin_val_path, O_RDONLY);
+    fd = rp_irq_open_stat(pin_no);
 
     handle->fd = fd;
     handle->pfd.fd = fd;
@@ -125,8 +137,8 @@ void rp_irq_init(uint8_t pin_no, rp_irq_handle_t *handle)
 
 rp_irq_stat_t rp_irq_wait(rp_irq_handle_t *handle, uint32_t wait_msec)
 {
-    int ret;
     char stat;
+    int ret;
 
     lseek(handle->fd, 0, SEEK_SET);
     
@@ -134,42 +146,17 @@ rp_irq_stat_t rp_irq_wait(rp_irq_handle_t *handle, uint32_t wait_msec)
     if (ret == 0) {
         return RP_IRQ_STAT_TIMEOUT;
     }
-    ret = read(handle->fd, &stat, 1);
-    if (ret != 1) {
-        fprintf(stderr, "ERROR: read (at %s:%d)\n", __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
-    }
 
-    switch (stat) {
-    case '0': return RP_IRQ_STAT_L;
-    case '1': return RP_IRQ_STAT_H;
-    default:
-        fprintf(stderr, "ERROR: invalid stat (at %s:%d)\n", __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
-    }
+    return rp_irq_read_stat(handle->fd);
 }
 
 rp_irq_stat_t rp_irq_get_state(uint8_t pin_no)
 {
     int fd;
-    char pin_val_path[sizeof("/sys/class/gpio/gpioXX/value")];
 
-    if (pin_no > 27) {
-        fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
-    }
-
-    snprintf(pin_val_path, sizeof(pin_val_path), "/sys/class/gpio/gpio%d/value", pin_no);
-
-    fd = rp_irq_file_open(pin_val_path, O_RDONLY);
-
-    handle->fd = fd;
-    handle->pfd.fd = fd;
-    handle->pfd.events = POLLPRI;
-
-
+    fd = rp_irq_open_stat(pin_no);
+    return rp_irq_read_stat(handle->fd);
 }
-
 
 // Local Variables:
 // coding: shift_jis-unix
