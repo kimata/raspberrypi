@@ -5,6 +5,8 @@
 
 #include "rp_irq.h"
 
+#define TIMEOUT_MSEC    10000
+
 int main(int argc,char *argv[])
 {
     uint8_t pin_no;
@@ -17,21 +19,22 @@ int main(int argc,char *argv[])
 
     pin_no = atoi(argv[1]);
 
-
+    rp_irq_enable(pin_no, RP_IRQ_EDGE_FALLING);
     rp_irq_init(pin_no, &handle);
     while (1) {
-        rp_irq_stat_t stat = rp_irq_wait(&handle, 10000);
+        rp_irq_stat_t stat = rp_irq_wait(&handle, TIMEOUT_MSEC);
         
         switch (stat) {
         case RP_IRQ_STAT_L:
-            print "state: 0\n"; break;
+            printf("state: 0\n"); break;
         case RP_IRQ_STAT_H:
-            print "state: 1\n"; break;
+            printf("state: 1\n"); break;
         case RP_IRQ_STAT_TIMEOUT:
-            print "timeout\n"; break;
+            printf("timeout\n"); break;
         default:
         fprintf(stderr, "ERROR: invalid stat (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
+        }
     }
     rp_irq_disable(pin_no);
 

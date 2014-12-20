@@ -22,7 +22,7 @@ int rp_irq_file_open(const char *path, int flags)
 
     fd = open(path, flags);
     if (fd < 0) {
-        fprintf(stderr, "ERROR: open file (at %s:%d)\n", __FILE__, __LINE__);
+        fprintf(stderr, "ERROR: open file %s (at %s:%d)\n", path, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -103,8 +103,8 @@ void rp_irq_init(uint8_t pin_no, rp_irq_handle_t *handle)
     fd = rp_irq_file_open(pin_val_path, O_RDONLY);
 
     handle->fd = fd;
-    handle->pfd->fd = fd;
-    handle->pfd->events = POLLPRI;
+    handle->pfd.fd = fd;
+    handle->pfd.events = POLLPRI;
 }
 
 
@@ -112,13 +112,14 @@ rp_irq_stat_t rp_irq_wait(rp_irq_handle_t *handle, uint32_t wait_msec)
 {
     int ret;
     char stat;
-    lseek(fd, 0, SEEK_SET);
+
+    lseek(handle->fd, 0, SEEK_SET);
     
-    ret = poll(&pfd, 1, wait_msec);
+    ret = poll(&(handle->pfd), 1, wait_msec);
     if (ret == 0) {
         return RP_IRQ_STAT_TIMEOUT;
     }
-    ret = read(fd, &stat, 1);
+    ret = read(handle->fd, &stat, 1);
     if (ret != 1) {
         fprintf(stderr, "ERROR: read (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
