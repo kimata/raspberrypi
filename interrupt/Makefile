@@ -6,13 +6,13 @@
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, version 2.
 
-LIB     	:= libadt7410_ctrl.a
-LIB_SRCS  	:= rp_i2c.c adt7410_ctrl.c
+LIB     	:= librp_irq.a
+LIB_SRCS  	:= rp_irq.c
 
-TEST_APP	:= adt7410.test
+TEST_APP	:= rp_irq.test
 TEST_SRC	:= test.c
 
-CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O0
+CFLAGS 		:= -Wall -Wextra -std=c99 -O3 -fPIC -pipe
 LDFLAGS 	:= -Wall
 
 lib: $(LIB)

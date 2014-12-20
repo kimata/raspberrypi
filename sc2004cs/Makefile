@@ -22,7 +22,7 @@ $(LIB): $(subst .c,.o,$(LIB_SRCS))
 	ar r $@ $^
 
 $(TEST_APP): $(TEST_SRC) $(LIB)
-	gcc -o $@ $< $(LDFLAGS) -L. -l$(patsubst lib%.a,%,$(LIB))
+	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. -l$(patsubst lib%.a,%,$(LIB))
 
 %.o: %.c
 	gcc $(CFLAGS) -c -o $@ $< 
