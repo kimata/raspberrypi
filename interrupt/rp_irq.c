@@ -8,13 +8,18 @@
  * published by the Free Software Foundation, version 2.
  */
 
+#define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "rp_irq.h"
+
+#define GPIO_PIN_COUNT          28
+#define WATCH_INTERVAL_MSEC     500
 
 static int rp_irq_file_open(const char *path, int flags)
 {
@@ -31,10 +36,9 @@ static int rp_irq_file_open(const char *path, int flags)
 
 static int rp_irq_open_stat(uint8_t pin_no)
 {
-    int fd;
     char pin_val_path[sizeof("/sys/class/gpio/gpioXX/value")];
 
-    if (pin_no > 27) {
+    if (pin_no >= GPIO_PIN_COUNT) {
         fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
@@ -72,7 +76,7 @@ void rp_irq_enable(uint8_t pin_no, rp_irq_edge_mode_t mode)
     char pin_dir_path[sizeof("/sys/class/gpio/gpioXX/direction")];
     char pin_edge_path[sizeof("/sys/class/gpio/gpioXX/edge")];
 
-    if (pin_no > 27) {
+    if (pin_no >= GPIO_PIN_COUNT) {
         fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
@@ -112,7 +116,7 @@ void rp_irq_disable(uint8_t pin_no)
     int fd;
     char pin_no_str[sizeof("XX")];
 
-    if (pin_no > 27) {
+    if (pin_no >= GPIO_PIN_COUNT) {
         fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
@@ -137,7 +141,6 @@ void rp_irq_init(uint8_t pin_no, rp_irq_handle_t *handle)
 
 rp_irq_stat_t rp_irq_wait(rp_irq_handle_t *handle, uint32_t wait_msec)
 {
-    char stat;
     int ret;
 
     lseek(handle->fd, 0, SEEK_SET);
@@ -150,12 +153,53 @@ rp_irq_stat_t rp_irq_wait(rp_irq_handle_t *handle, uint32_t wait_msec)
     return rp_irq_read_stat(handle->fd);
 }
 
-rp_irq_stat_t rp_irq_get_state(uint8_t pin_no)
+rp_irq_stat_t rp_irq_get_stat(uint8_t pin_no)
 {
     int fd;
 
     fd = rp_irq_open_stat(pin_no);
-    return rp_irq_read_stat(handle->fd);
+    rp_irq_stat_t stat = rp_irq_read_stat(fd);
+    close(fd);
+    
+    return stat;
+}
+
+void rp_irq_watch_stat(uint8_t pin_no, pid_t parent)
+{
+    struct timespec check_interval = { 0, 1 * 1E6 }; // 1ms 
+    static uint8_t stat_cur_count = 0;
+    rp_irq_handle_t handle;
+    rp_irq_stat_t stat_prev;
+
+    rp_irq_init(pin_no, &handle);    
+ WATCH_START:
+    while (1) {
+        stat_prev = rp_irq_wait(&handle, TIMEOUT_MSEC);
+        if (stat_prev == RP_IRQ_STAT_TIMEOUT) {
+            continue;
+        }
+        while (1) {
+            rp_irq_stat_t stat = rp_irq_get_stat(pin_no);
+            if (stat == stat_prev) {
+                stat_cur_count++;
+                if (stat_cur_count == NOTIFY_THRESHOLD) {
+                    g_stat = stat;
+                    if (kill(parent, SIGUSR1) != 0) {
+                        fprintf(stderr, "ERROR: kill (at %s:%d)\n", __FILE__, __LINE__);
+                        exit(EXIT_FAILURE);
+                    }
+                    stat_cur_count = 0;
+                    goto WATCH_START;
+                }
+            } else {
+                stat_prev = stat;
+                stat_cur_count = 0;
+            }
+            nanosleep(&check_interval, NULL);
+        }
+    }
+
+    return EXIT_SUCCESS;
 }
 
 // Local Variables:

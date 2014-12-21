@@ -4,40 +4,26 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <errno.h>
 
 #include "rp_irq.h"
 
-#define TIMEOUT_MSEC    10000
+#define TIMEOUT_MSEC    		10000
+#define NOTIFY_THRESHOLD  		10
 
-static uint8_t state_change = 0;
+static uint8_t g_stat_change 	= 0;
+
+static uint8_t no = 0;
 
 static void sigusr1_handler(int sig)
 {
     if (sig != SIGUSR1) {
         return;
     }
-    stat_change = 1;
+    g_stat_change = 1;
+    printf("change! %d\n", no++);
     signal(SIGUSR1, sigusr1_handler);
 }
 
-static int watch_state(uint8_t pin_no, pid_t parent)
-{
-    rp_irq_handle_t handle;
-
-    rp_irq_init(pin_no, &handle);    
-    while (1) {
-        if (rp_irq_wait(&handle, TIMEOUT_MSEC) != RP_IRQ_STAT_TIMEOUT) {
-            if (kill(parent, SIGUSR1) != 0) {
-                fprintf(stderr, "ERROR: kill (at %s:%d)\n", __FILE__, __LINE__);
-                exit(EXIT_FAILURE);
-            }
-        }
-
-    }
-
-    return EXIT_SUCCESS;
-}
 
 static int listen_change()
 {
@@ -45,9 +31,9 @@ static int listen_change()
 
     while (1) {
         sleep(1);
-        if (state_change == 1) {
-            
-            state_change = 0;
+        if (g_stat_change == 1) {
+            // DO SOMETHING
+            g_stat_change = 0;
         }
     }
 
@@ -67,7 +53,7 @@ int main(int argc,char *argv[])
 
     pin_no = atoi(argv[1]);
 
-    rp_irq_enable(pin_no, RP_IRQ_EDGE_FALLING);
+    rp_irq_enable(pin_no, RP_IRQ_EDGE_BOTH);
 
     pid = fork();
     switch(pid) {
@@ -75,7 +61,7 @@ int main(int argc,char *argv[])
         fprintf(stderr, "ERROR: fork (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     case 0:
-        return watch_state(pin_no, getppid());
+        return watch_stat(pin_no, getppid());
     default:
         return listen_change();
     }
