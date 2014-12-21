@@ -15,11 +15,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
 
 #include "rp_irq.h"
 
 #define GPIO_PIN_COUNT          28
-#define WATCH_INTERVAL_MSEC     500
+#define TIMEOUT_MSEC    		(10 * 1000) // 10sec
+#define NOTIFY_THRESHOLD  		10
 
 static int rp_irq_file_open(const char *path, int flags)
 {
@@ -166,7 +168,7 @@ rp_irq_stat_t rp_irq_get_stat(uint8_t pin_no)
 
 void rp_irq_watch_stat(uint8_t pin_no, pid_t parent)
 {
-    struct timespec check_interval = { 0, 1 * 1E6 }; // 1ms 
+    struct timespec check_interval = { 0, 1 * 1E6 }; // 1ms (but, actually 10ms on default kernel)
     static uint8_t stat_cur_count = 0;
     rp_irq_handle_t handle;
     rp_irq_stat_t stat_prev;
@@ -183,7 +185,6 @@ void rp_irq_watch_stat(uint8_t pin_no, pid_t parent)
             if (stat == stat_prev) {
                 stat_cur_count++;
                 if (stat_cur_count == NOTIFY_THRESHOLD) {
-                    g_stat = stat;
                     if (kill(parent, SIGUSR1) != 0) {
                         fprintf(stderr, "ERROR: kill (at %s:%d)\n", __FILE__, __LINE__);
                         exit(EXIT_FAILURE);
@@ -198,8 +199,6 @@ void rp_irq_watch_stat(uint8_t pin_no, pid_t parent)
             nanosleep(&check_interval, NULL);
         }
     }
-
-    return EXIT_SUCCESS;
 }
 
 // Local Variables:

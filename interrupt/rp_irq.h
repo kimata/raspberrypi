@@ -36,6 +36,7 @@ void rp_irq_disable(uint8_t pin_no);
 void rp_irq_init(uint8_t pin_no, rp_irq_handle_t *handle);
 rp_irq_stat_t rp_irq_wait(rp_irq_handle_t *handle, uint32_t wait_msec);
 rp_irq_stat_t rp_irq_get_stat(uint8_t pin_no);
+void rp_irq_watch_stat(uint8_t pin_no, pid_t parent);
 
 #endif
 

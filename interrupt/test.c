@@ -7,9 +7,6 @@
 
 #include "rp_irq.h"
 
-#define TIMEOUT_MSEC    		10000
-#define NOTIFY_THRESHOLD  		10
-
 static uint8_t g_stat_change 	= 0;
 
 static uint8_t no = 0;
@@ -61,13 +58,11 @@ int main(int argc,char *argv[])
         fprintf(stderr, "ERROR: fork (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     case 0:
-        return watch_stat(pin_no, getppid());
+        rp_irq_watch_stat(pin_no, getppid());
     default:
-        return listen_change();
+        listen_change();
+        rp_irq_disable(pin_no);
     }
-    rp_irq_disable(pin_no);
-
-    fprintf(stderr, "EXIT (at %s:%d)\n", __FILE__, __LINE__);
 
     return EXIT_SUCCESS;
 }
