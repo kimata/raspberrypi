@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
+#include <sys/resource.h>
 
 #include "rp_irq.h"
 
@@ -173,6 +174,7 @@ void rp_irq_watch_stat(uint8_t pin_no, pid_t parent)
     rp_irq_handle_t handle;
     rp_irq_stat_t stat_prev;
 
+    setpriority(PRIO_PROCESS, 0, 19);
     rp_irq_init(pin_no, &handle);    
  WATCH_START:
     while (1) {
@@ -183,6 +185,7 @@ void rp_irq_watch_stat(uint8_t pin_no, pid_t parent)
         while (1) {
             rp_irq_stat_t stat = rp_irq_get_stat(pin_no);
             if (stat == stat_prev) {
+                // MEMO: remove chattering
                 stat_cur_count++;
                 if (stat_cur_count == NOTIFY_THRESHOLD) {
                     if (kill(parent, SIGUSR1) != 0) {
