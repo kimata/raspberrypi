@@ -8,7 +8,10 @@ from cuisine import *
 
 @task
 def setup_package():
-    # raspi-config は使わないので，自動起動を無効化
+    # rootfs サイズを拡張
+    run('raspi-config --expand-rootfs')
+
+    # 以後，raspi-config は使わないので自動起動を無効化
     if file_exists('/etc/profile.d/raspi-config.sh'):
         run('sudo rm -f /etc/profile.d/raspi-config.sh')
 
@@ -37,9 +40,6 @@ def setup_package():
             pubkey = f.read()
         with mode_sudo():
             ssh_authorize("pi", pubkey)
-
-        # rootfs サイズを拡張
-        run('raspi-config --expand-rootfs')
 
         # I2C の有効化
         run('sed -i -e \'s/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g\' ' +
