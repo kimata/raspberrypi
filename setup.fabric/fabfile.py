@@ -38,7 +38,13 @@ def setup_package():
         with mode_sudo():
             ssh_authorize("pi", pubkey)
 
+        # rootfs サイズを拡張
+        run('raspi-config --expand-rootfs')
+
         # I2C の有効化
-        run("sed -i -e 's/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g' " +
-            "/etc/modprobe.d/raspi-blacklist.conf")
+        run('sed -i -e \'s/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g\' ' +
+            '/etc/modprobe.d/raspi-blacklist.conf')
+
+        # 再起動
+        run('reboot')
         
