@@ -9,11 +9,11 @@ from cuisine import *
 @task
 def setup_package():
     # rootfs サイズを拡張
-    run('raspi-config --expand-rootfs')
+    sudo('raspi-config --expand-rootfs')
 
     # 以後，raspi-config は使わないので自動起動を無効化
     if file_exists('/etc/profile.d/raspi-config.sh'):
-        run('sudo rm -f /etc/profile.d/raspi-config.sh')
+        sudo('rm -f /etc/profile.d/raspi-config.sh')
 
     with settings(mode_sudo()):
         package_update()
