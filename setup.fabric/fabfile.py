@@ -39,5 +39,6 @@ def setup_package():
             ssh_authorize("pi", pubkey)
 
         # I2C の有効化
-        sudo("sed -i -e 's/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g' " +
-             "/etc/modprobe.d/raspi-blacklist.conf")
+        run("sed -i -e 's/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g' " +
+            "/etc/modprobe.d/raspi-blacklist.conf")
+        
