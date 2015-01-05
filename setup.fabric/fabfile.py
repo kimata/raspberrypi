@@ -11,7 +11,7 @@
 #     % sudo apt-get install python-pip
 #     % sudo pip install cuisine
 #
-#   * 無線 LAN の設定 (必要な場合)
+#   * 無線 LAN の設定ファイルの作成 (必要な場合)
 #     WiFi を使用する場合，接続先のアクセスポイントに関して，
 #     「wpa_passphrase "SSID" "パスフレーズ"」を実行して得られた SSID および PSK 
 #     の値を，wifi_config.py というファイルを作成して書き込んでおきます．
@@ -55,14 +55,12 @@ import cuisine
 @task
 def setup():
     with settings(
-        hide('warnings', 'stdout', 'stderr')
+        # hide('warnings', 'stdout', 'stderr')
     ):
-        # rootfs サイズを拡張
-        sudo('raspi-config --expand-rootfs')
-
-        # 以後，raspi-config は使わないので自動起動を無効化
+        # raspi-config の自動起動を無効化
         if cuisine.file_exists('/etc/profile.d/raspi-config.sh'):
-            sudo('rm -f /etc/profile.d/raspi-config.sh')
+            # NOTE: sudo() だと，raspi-config が起動してしまうので run()
+            run('sudo rm -f /etc/profile.d/raspi-config.sh')
 
         if os.environ.has_key('RASP_HOSTNAME'):
             setup_hostname(os.environ['RASP_HOSTNAME'])
@@ -72,6 +70,9 @@ def setup():
         setup_package()
         setup_i2c()
         setup_wlan()
+
+        # rootfs サイズを拡張
+        sudo('raspi-config --expand-rootfs')
 
         # 再起動
         sudo('reboot')
@@ -124,7 +125,7 @@ def setup_i2c():
     sudo('sed -i -e \'s/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g\' ' +
          '/etc/modprobe.d/raspi-blacklist.conf')
 
-# WIFI の有効化
+# WiFi の有効化
 def setup_wlan():
     if not cuisine.file_exists('/sys/class/net/wlan0'):
         return
@@ -135,7 +136,7 @@ def setup_wlan():
         (file, pathname, description) = imp.find_module('wifi_config', ['.'])
         wifi_config = imp.load_module("wifi_config", file, pathname, description)
     except ImportError:
-        puts(fabric.colors.red('FAILED to load wifi_config.py', True))
+        puts(fabric.colors.red('SKIP WiFi Configuration. (FAILED to load wifi_config.py)', True))
         return 
 
     cuisine.file_write(
@@ -149,11 +150,14 @@ def setup_wlan():
                  + '    proto=WPA2\n'
                  + '    pairwise=CCMP\n'
                  + '    group=CCMP\n'
-                 + '    priority=2\n'
                  + '}\n',
         mode='600',
         sudo=True
         )
+
+    sudo('sed -i -e \'s/^wpa-roam \/etc\/wpa_supplicant\/wpa_supplicant.conf/'
+         + 'wpa-conf \/etc\/wpa_supplicant\/wpa_supplicant.conf/\' /etc/network/interfaces') 
+    sudo('sed -i -e \'s/^iface wlan0 inet manual/iface wlan0 inet dhcp/\' /etc/network/interfaces')
 
     # NOTE: Wifi の場合は「ホスト名-wifi」でアクセスできるようにする
     dhclient_conf = cuisine.text_ensure_line(
