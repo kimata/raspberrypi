@@ -139,13 +139,16 @@ def setup_i2c():
             mode='755',
             sudo=True
             )
+        modules_conf = cuisine.text_ensure_line(
+            cuisine.file_read('/etc/modules'),
+            'i2c-dev'
+            )
         cuisine.file_write(
-            location = '/etc/modprobe.d/i2c.conf',
-            content  = ' modprobe i2c-dev\n',
+            location = '/etc/modules',
+            content  = modules_conf,
             mode='644',
             sudo=True
             )
-
 
 # WiFi の有効化
 def setup_wlan():
