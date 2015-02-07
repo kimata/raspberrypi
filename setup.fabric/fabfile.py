@@ -117,13 +117,15 @@ def setup_package():
                 'ruby',
                 'git',
                 'zsh',
+                'lsb-release',
                 'mlocate',
                 ])
 
 # I2C の有効化
 def setup_i2c():
-    sudo('sed -i -e \'s/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g\' ' +
-         '/etc/modprobe.d/raspi-blacklist.conf')
+    if cuisine.file_exists('/etc/modprobe.d/raspi-blacklist.conf'):
+        sudo('sed -i -e \'s/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g\' ' +
+             '/etc/modprobe.d/raspi-blacklist.conf')
 
 # WiFi の有効化
 def setup_wlan():
