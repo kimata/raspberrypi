@@ -10,6 +10,8 @@ void test(uint8_t dev_addr)
     printf("temp: %.2f\n", v);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 int main(int argc, char *argv[])
 {
     adt7410_init(0x48);
@@ -18,6 +20,7 @@ int main(int argc, char *argv[])
 
     return EXIT_SUCCESS;
 }
+#pragma GCC diagnostic pop
 
 // Local Variables:
 // coding: shift_jis-unix
