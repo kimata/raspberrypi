@@ -117,6 +117,7 @@ def setup_package():
                 'ruby',
                 'git',
                 'zsh',
+                'i2c-tools',
                 'lsb-release',
                 'mlocate',
                 ])
@@ -126,6 +127,28 @@ def setup_i2c():
     if cuisine.file_exists('/etc/modprobe.d/raspi-blacklist.conf'):
         sudo('sed -i -e \'s/^blacklist i2c-bcm2708/# blacklist i2c-bcm2708/g\' ' +
              '/etc/modprobe.d/raspi-blacklist.conf')
+    else:
+        # RASPBIAN Release 2015-01-31 or later
+        boot_conf = cuisine.text_ensure_line(
+            cuisine.file_read('/boot/config.txt'),
+            'dtparam=i2c_arm=on'
+            )
+        cuisine.file_write(
+            location = '/boot/config.txt',
+            content  = boot_conf,
+            mode='755',
+            sudo=True
+            )
+        modules_conf = cuisine.text_ensure_line(
+            cuisine.file_read('/etc/modules'),
+            'i2c-dev'
+            )
+        cuisine.file_write(
+            location = '/etc/modules',
+            content  = modules_conf,
+            mode='644',
+            sudo=True
+            )
 
 # WiFi の有効化
 def setup_wlan():
