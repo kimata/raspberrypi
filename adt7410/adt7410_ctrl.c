@@ -9,6 +9,9 @@
  *
  */
 
+// To use this program, it is required to activate I2C restart.
+// Write "options i2c_bcm2708 combined=1" to /etc/modprobe.d/i2c.conf.
+
 #define _BSD_SOURCE
 
 #include <stdlib.h>
@@ -28,6 +31,7 @@ void adt7410_init(uint8_t dev_addr)
 
     // MEMO: verify
     if (buf != conf) {
+        fprintf(stderr, "(buf, conf) = (%x, %x)\n", buf, conf);
         fprintf(stderr, "ERROR: write conf reg (at %s:%d)\n",
                 __FILE__, __LINE__);
         exit(EXIT_FAILURE);
