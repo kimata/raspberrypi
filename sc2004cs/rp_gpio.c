@@ -73,7 +73,12 @@ void rp_gpio_get_input(uint8_t pin_no, rp_gpio_level_t *level)
         exit(EXIT_FAILURE);
     }
 
-    *level = (gpio_reg[13] & (0x1 << pin_no)) != 0;
+    uint32_t val = (gpio_reg[13] & (0x1 << pin_no));
+    if (val == 0) {
+        *level =  RP_GPIO_L;
+    } else {
+        *level =  RP_GPIO_H;
+    }
 }
 
 void rp_gpio_set_output(uint8_t pin_no, rp_gpio_level_t level)
@@ -82,7 +87,7 @@ void rp_gpio_set_output(uint8_t pin_no, rp_gpio_level_t level)
         fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
-    if (level == L) {
+    if (level == RP_GPIO_L) {
         gpio_reg[10] = 0x1 << pin_no;
     } else {
         gpio_reg[7] = 0x1 << pin_no;

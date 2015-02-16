@@ -18,19 +18,19 @@
 // BCM2835 ARM Peripherals 
 // Table 6-3 – GPIO Alternate function select register 1 
 typedef enum {
-  RP_GPIO_INPUT	= 0x0,
-  RP_GPIO_OUTPUT= 0x1,
-  RP_GPIO_ALT0  = 0x4,
-  RP_GPIO_ALT1  = 0x5,
-  RP_GPIO_ALT2  = 0x6,
-  RP_GPIO_ALT3  = 0x7,
-  RP_GPIO_ALT4  = 0x3,
-  RP_GPIO_ALT5  = 0x2
+    RP_GPIO_INPUT	= 0x0,
+    RP_GPIO_OUTPUT	= 0x1,
+    RP_GPIO_ALT0  	= 0x4,
+    RP_GPIO_ALT1  	= 0x5,
+    RP_GPIO_ALT2  	= 0x6,
+    RP_GPIO_ALT3  	= 0x7,
+    RP_GPIO_ALT4  	= 0x3,
+    RP_GPIO_ALT5  	= 0x2
 } rp_gpio_mode_t;
 
 typedef enum {
-    L 			= 0x0,
-    H 			= 0x1
+    RP_GPIO_L		= 0x0,
+    RP_GPIO_H		= 0x1
 } rp_gpio_level_t;
 
 void rp_gpio_init();
