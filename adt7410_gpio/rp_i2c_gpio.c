@@ -50,7 +50,7 @@ struct i2c_rdwr_ioctl_data {
 
 void rp_i2c_gpio_sleep(struct timespec *time)
 {
-    uint32_t nsec = (uint32_t)time->tv_nsec / 2; //  / 10
+    uint32_t nsec = (uint32_t)time->tv_nsec / 10;
     for (uint32_t i = 0; i < nsec; i++) {
         __asm__ volatile("nop");
     }
@@ -58,7 +58,8 @@ void rp_i2c_gpio_sleep(struct timespec *time)
 
 void rp_i2c_gpio_wait_quarter_clock()
 {
-    struct timespec clock_quarter_time = { 0, 10 * 1E3 / 4 };	// 100kHz
+    struct timespec clock_time 			= { 0, 10 * 1E3 };	// 10us = 100kHz
+    struct timespec clock_quarter_time 	= { 0, clock_time.tv_nsec  / 4 };
 
     rp_i2c_gpio_sleep(&clock_quarter_time);
 }
