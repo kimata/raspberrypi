@@ -50,7 +50,7 @@ struct i2c_rdwr_ioctl_data {
 
 void rp_i2c_gpio_sleep(struct timespec *time)
 {
-    uint32_t nsec = (uint32_t)time->tv_nsec / 10;
+    uint32_t nsec = (uint32_t)time->tv_nsec / 10; // FIXME:
     for (uint32_t i = 0; i < nsec; i++) {
         __asm__ volatile("nop");
     }
