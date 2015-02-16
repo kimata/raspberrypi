@@ -125,6 +125,7 @@ void rp_i2c_gpio_read_bit(uint32_t *bit) {
     rp_i2c_gpio_wait_quarter_clock();
     rp_i2c_gpio_set_scl(RP_GPIO_H);
     rp_i2c_gpio_wait_quarter_clock();
+    // check clock stretch
     while (1) {
         rp_i2c_gpio_get_scl(&level);
         if (level != RP_GPIO_L) {
