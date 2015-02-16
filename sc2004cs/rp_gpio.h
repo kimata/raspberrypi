@@ -28,10 +28,17 @@ typedef enum {
   RP_GPIO_ALT5  = 0x2
 } rp_gpio_mode_t;
 
+typedef enum {
+    L 			= 0x0,
+    H 			= 0x1
+} rp_gpio_level_t;
+
 void rp_gpio_init();
 void rp_gpio_set_mode(uint8_t pin_no, rp_gpio_mode_t mode);
-void rp_gpio_set_output(uint8_t pin_no, uint8_t level);
+void rp_gpio_get_input(uint8_t pin_no, rp_gpio_level_t *level);
+void rp_gpio_set_output(uint8_t pin_no, rp_gpio_level_t level);
 void rp_gpio_set_output_bits(uint32_t level_bits);
+
 
 #endif
 

@@ -66,13 +66,23 @@ void rp_gpio_set_mode(uint8_t pin_no, rp_gpio_mode_t mode)
     gpio_reg[reg_index] = (gpio_reg[reg_index] & reg_mask) | ((mode & 0x7) << reg_offs);
 }
 
-void rp_gpio_set_output(uint8_t pin_no, uint8_t level)
+void rp_gpio_get_input(uint8_t pin_no, rp_gpio_level_t *level)
 {
     if (pin_no > 27) {
         fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
-    if (level == 0) {
+
+    *level = (gpio_reg[13] & (0x1 << pin_no)) != 0;
+}
+
+void rp_gpio_set_output(uint8_t pin_no, rp_gpio_level_t level)
+{
+    if (pin_no > 27) {
+        fprintf(stderr, "ERROR: pin number out of range (at %s:%d)\n", __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+    if (level == L) {
         gpio_reg[10] = 0x1 << pin_no;
     } else {
         gpio_reg[7] = 0x1 << pin_no;
