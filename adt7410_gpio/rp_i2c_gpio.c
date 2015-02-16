@@ -165,7 +165,6 @@ void rp_i2c_gpio_write_msg(struct i2c_msg *i2c_msg) {
             rp_i2c_gpio_write_bit(data & 0x80);
             data <<= 1;
         }
-        // wait ACK
         rp_i2c_gpio_wait_ack();
     }
 }
@@ -179,14 +178,13 @@ void rp_i2c_gpio_read_msg(struct i2c_msg *i2c_msg) {
             rp_i2c_gpio_read_bit(&bit);
             data = (data << 1) | (bit & 0x1);
         }
-        // wait ACK
         rp_i2c_gpio_wait_ack();
         i2c_msg->buf[i] = data;
     }
 }
 
 void rp_i2c_gpio_send_msg(struct i2c_msg *i2c_msg, uint8_t is_last) {
-    // send start condition
+    // send START condition
     rp_i2c_gpio_set_sda(RP_GPIO_L);
     rp_i2c_gpio_wait_half_clock();
     rp_i2c_gpio_set_scl(RP_GPIO_L);
@@ -201,7 +199,6 @@ void rp_i2c_gpio_send_msg(struct i2c_msg *i2c_msg, uint8_t is_last) {
     }
     rp_i2c_gpio_write_bit(i2c_msg->flags & I2C_M_RD);
     
-    // wait ACK
     rp_i2c_gpio_wait_ack();
 
     if (i2c_msg->flags & I2C_M_RD) {
@@ -210,6 +207,7 @@ void rp_i2c_gpio_send_msg(struct i2c_msg *i2c_msg, uint8_t is_last) {
         rp_i2c_gpio_write_msg(i2c_msg);
     }
     if (is_last)  {
+        // send STOP condition
         rp_i2c_gpio_set_sda(RP_GPIO_L);
         rp_i2c_gpio_wait_quarter_clock();
         rp_i2c_gpio_set_scl(RP_GPIO_H);
