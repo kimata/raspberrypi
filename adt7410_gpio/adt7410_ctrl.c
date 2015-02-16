@@ -16,7 +16,10 @@
 #include <endian.h>
 
 #include "rp_i2c.h"
+#include "rp_gpio.h"
 #include "adt7410_ctrl.h"
+
+void rp_i2c_gpio_wait_quarter_clock();
 
 void adt7410_init(uint8_t dev_addr)
 {
@@ -24,16 +27,28 @@ void adt7410_init(uint8_t dev_addr)
     uint8_t buf;
 
     rp_i2c_init();
-    
+
+    /* rp_gpio_level_t level; */
+    /* uint32_t i = 0; */
     /* while (1) { */
-    /*     uint8_t level; */
-    /*     rp_gpio_get_input(4, &level); */
-    /*     printf("level = %d\n", level); */
-    /*     sleep(3); */
+    /*     rp_i2c_gpio_set_scl(i++ & 0x1); */
+    /*     /\* rp_i2c_gpio_set_scl(0); *\/ */
+    /*     rp_i2c_gpio_wait_quarter_clock(); */
+    /*     rp_i2c_gpio_get_sda(&level); */
     /* } */
 
     /* rp_i2c_write(dev_addr, ADT7410_REG_CONF, (uint8_t *)&conf, sizeof(conf)); */
-    rp_i2c_read(dev_addr, ADT7410_REG_CONF, (uint8_t *)&buf, sizeof(buf));
+    while (1) {
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_wait_quarter_clock();
+
+        rp_i2c_read(dev_addr, ADT7410_REG_CONF, (uint8_t *)&buf, sizeof(buf));
+    }
 
     fprintf(stderr, "buf = %x\n", buf);
 

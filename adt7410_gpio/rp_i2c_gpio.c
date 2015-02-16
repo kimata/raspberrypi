@@ -50,7 +50,7 @@ struct i2c_rdwr_ioctl_data {
 
 void rp_i2c_gpio_sleep(struct timespec *time)
 {
-    uint32_t nsec = (uint32_t)time->tv_nsec;
+    uint32_t nsec = (uint32_t)time->tv_nsec / 2; //  / 10
     for (uint32_t i = 0; i < nsec; i++) {
         __asm__ volatile("nop");
     }
@@ -83,7 +83,6 @@ void rp_i2c_gpio_set_signal(uint8_t pin_no, rp_gpio_level_t level) {
     } else {
         // Hi-Z
         rp_gpio_set_mode(pin_no, RP_GPIO_INPUT);
-        rp_gpio_set_output(pin_no, level);
     }
 }
 
@@ -91,19 +90,25 @@ void rp_i2c_gpio_set_sda(rp_gpio_level_t level) {
     rp_i2c_gpio_set_signal(PIN_SDA, level);
 }
 
+void rp_i2c_gpio_set_scl(rp_gpio_level_t level) {
+    rp_i2c_gpio_set_signal(PIN_SCL, level);
+}
+
 void rp_i2c_gpio_get_sda(rp_gpio_level_t *level) {
     struct timespec clock_quarter_time = { 0, 1 * 1E3 / 4 };	// 100kHz
 
     rp_gpio_set_mode(PIN_SDA, RP_GPIO_INPUT);
-    rp_i2c_gpio_sleep(&clock_quarter_time);
-
+    // FIXME
+    /* rp_i2c_gpio_sleep(&clock_quarter_time); */
 
     rp_gpio_get_input(PIN_SDA, level);
 }
 
-void rp_i2c_gpio_set_scl(rp_gpio_level_t level) {
-    rp_i2c_gpio_set_signal(PIN_SDA, level);
+void rp_i2c_gpio_get_scl(rp_gpio_level_t *level) {
+    rp_gpio_set_mode(PIN_SCL, RP_GPIO_INPUT);
+    rp_gpio_get_input(PIN_SCL, level);
 }
+
 
 void rp_i2c_gpio_write_bit(uint32_t bit) {
     if (bit) {
@@ -119,17 +124,23 @@ void rp_i2c_gpio_write_bit(uint32_t bit) {
 }
 
 void rp_i2c_gpio_read_bit(uint32_t *bit) {
+    struct timespec wait_time = { 0, 100 };
     rp_gpio_level_t level;
 
     rp_i2c_gpio_wait_quarter_clock();
     rp_i2c_gpio_set_scl(RP_GPIO_H);
     rp_i2c_gpio_wait_quarter_clock();
+    while (1) {
+        rp_i2c_gpio_get_scl(&level);
+        if (level != RP_GPIO_L) {
+            break;
+        }
+        rp_i2c_gpio_sleep(&wait_time);
+    }
     rp_i2c_gpio_get_sda(&level);
     rp_i2c_gpio_wait_quarter_clock();
     rp_i2c_gpio_set_scl(RP_GPIO_L);
     rp_i2c_gpio_wait_quarter_clock();
-
-    printf("bit level = %d\n", level);
 
     if (level == RP_GPIO_H) {
         *bit = 1;
@@ -139,10 +150,14 @@ void rp_i2c_gpio_read_bit(uint32_t *bit) {
 }
 
 void rp_i2c_gpio_wait_ack() {
+    rp_gpio_level_t level;
+
     rp_i2c_gpio_set_sda(RP_GPIO_H);
     rp_i2c_gpio_wait_quarter_clock();
     rp_i2c_gpio_set_scl(RP_GPIO_H);
-    rp_i2c_gpio_wait_half_clock();
+    rp_i2c_gpio_wait_quarter_clock();
+    rp_i2c_gpio_get_sda(&level);
+    rp_i2c_gpio_wait_quarter_clock();
     rp_i2c_gpio_set_scl(RP_GPIO_L);
     rp_i2c_gpio_wait_quarter_clock();
 }
@@ -175,29 +190,23 @@ void rp_i2c_gpio_read_msg(struct i2c_msg *i2c_msg) {
     }
 }
 
-void rp_i2c_gpio_send_msg(struct i2c_msg *i2c_msg) {
+
+
+void rp_i2c_gpio_send_msg(struct i2c_msg *i2c_msg, uint8_t is_last) {
     // send start condition
     rp_i2c_gpio_set_sda(RP_GPIO_L);
-    rp_i2c_gpio_wait_quarter_clock();
+    rp_i2c_gpio_wait_half_clock();
     rp_i2c_gpio_set_scl(RP_GPIO_L);
     rp_i2c_gpio_wait_quarter_clock();
 
     // send device Address
     uint16_t addr = i2c_msg->addr;
     for (uint32_t i = 0; i < 7; i++) {
-        rp_i2c_gpio_write_bit(addr & 0x80);
+        // NOTE: addr is 7bit format, so mask is 0x40
+        rp_i2c_gpio_write_bit(addr & 0x40);
         addr <<= 1;
     }
-    if (i2c_msg->flags & I2C_M_RD) {
-        rp_i2c_gpio_set_sda(RP_GPIO_H);
-    } else {
-        rp_i2c_gpio_set_sda(RP_GPIO_L);
-    }
-    rp_i2c_gpio_wait_quarter_clock();
-    rp_i2c_gpio_set_scl(RP_GPIO_H);
-    rp_i2c_gpio_wait_half_clock();
-    rp_i2c_gpio_set_scl(RP_GPIO_L);
-    rp_i2c_gpio_wait_quarter_clock();
+    rp_i2c_gpio_write_bit(i2c_msg->flags & I2C_M_RD);
     
     // wait ACK
     rp_i2c_gpio_wait_ack();
@@ -207,11 +216,19 @@ void rp_i2c_gpio_send_msg(struct i2c_msg *i2c_msg) {
     } else {
         rp_i2c_gpio_write_msg(i2c_msg);
     }
-
-    rp_i2c_gpio_set_sda(RP_GPIO_H);
-    rp_i2c_gpio_wait_quarter_clock();
-    rp_i2c_gpio_set_scl(RP_GPIO_H);
-    rp_i2c_gpio_wait_half_clock();
+    if (is_last)  {
+        rp_i2c_gpio_set_sda(RP_GPIO_L);
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_set_scl(RP_GPIO_H);
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_set_sda(RP_GPIO_H);
+        rp_i2c_gpio_wait_quarter_clock();
+    } else {
+        rp_i2c_gpio_set_sda(RP_GPIO_H);
+        rp_i2c_gpio_wait_quarter_clock();
+        rp_i2c_gpio_set_scl(RP_GPIO_H);
+        rp_i2c_gpio_wait_quarter_clock();
+    }
 }
 
 void rp_i2c_init() {
@@ -243,7 +260,10 @@ void rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
     };
 
     for (uint32_t i = 0; i < read_data.nmsgs; i++) {
-        rp_i2c_gpio_send_msg(&(read_data.msgs[i]));
+        rp_i2c_gpio_send_msg(&(read_data.msgs[i]), i == read_data.nmsgs);
+    }
+    if (read_msgs[1].buf[0] != 0) { 
+        printf("data = %02x\n", read_msgs[1].buf[0]);
     }
 }
 
