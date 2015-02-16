@@ -21,11 +21,11 @@
 #include "rp_i2c.h"
 #include "rp_gpio.h"
 
-#define PIN_SDA				4
-#define PIN_SCL				5
+#define PIN_SDA             4
+#define PIN_SCL             5
 
 #if !defined(ARRAY_SIZE_OF)
-#define ARRAY_SIZE_OF(A)	(sizeof(A)/sizeof((A)[0]))
+#define ARRAY_SIZE_OF(A)    (sizeof(A)/sizeof((A)[0]))
 #endif
 
 // copy from Linux/include/uapi/linux/i2c-dev.h
@@ -58,8 +58,8 @@ void rp_i2c_gpio_sleep(struct timespec *time)
 
 void rp_i2c_gpio_wait_quarter_clock()
 {
-    struct timespec clock_time 			= { 0, 10 * 1E3 };	// 10us = 100kHz
-    struct timespec clock_quarter_time 	= { 0, clock_time.tv_nsec  / 4 };
+    struct timespec clock_time          = { 0, 10 * 1E3 };  // 10us = 100kHz
+    struct timespec clock_quarter_time  = { 0, clock_time.tv_nsec  / 4 };
 
     rp_i2c_gpio_sleep(&clock_quarter_time);
 }
