@@ -26,6 +26,7 @@ void adt7410_init(uint8_t dev_addr)
     uint8_t conf = 1 << 7;
     uint8_t buf;
 
+    rp_i2c_init();
     rp_i2c_write(dev_addr, ADT7410_REG_CONF, (uint8_t *)&conf, sizeof(conf));
     rp_i2c_read(dev_addr, ADT7410_REG_CONF, (uint8_t *)&buf, sizeof(buf));
 

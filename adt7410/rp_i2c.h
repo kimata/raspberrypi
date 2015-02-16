@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 
+void rp_i2c_init();
+
 void rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
                  uint8_t *read_buf, uint8_t read_size);
 

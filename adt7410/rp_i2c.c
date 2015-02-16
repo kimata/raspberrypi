@@ -23,6 +23,11 @@
 
 #define BUS_ID  1
 
+void rp_i2c_init()
+{
+
+}
+
 int rp_i2c_open()
 {
     int fd;
