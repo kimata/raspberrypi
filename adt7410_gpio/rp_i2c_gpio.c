@@ -1,5 +1,5 @@
 /*
- * Raspberry Pi I2C Utility
+ * Raspberry Pi I2C Utility (using GPIO)
  *
  * Copyright (C) 2014 Tetsuya Kimata <kimata@green-rabbit.net>
  *
