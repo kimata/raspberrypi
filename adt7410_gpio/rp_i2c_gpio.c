@@ -95,12 +95,7 @@ void rp_i2c_gpio_set_scl(rp_gpio_level_t level) {
 }
 
 void rp_i2c_gpio_get_sda(rp_gpio_level_t *level) {
-    struct timespec clock_quarter_time = { 0, 1 * 1E3 / 4 };	// 100kHz
-
     rp_gpio_set_mode(PIN_SDA, RP_GPIO_INPUT);
-    // FIXME
-    /* rp_i2c_gpio_sleep(&clock_quarter_time); */
-
     rp_gpio_get_input(PIN_SDA, level);
 }
 
@@ -108,7 +103,6 @@ void rp_i2c_gpio_get_scl(rp_gpio_level_t *level) {
     rp_gpio_set_mode(PIN_SCL, RP_GPIO_INPUT);
     rp_gpio_get_input(PIN_SCL, level);
 }
-
 
 void rp_i2c_gpio_write_bit(uint32_t bit) {
     if (bit) {
@@ -190,8 +184,6 @@ void rp_i2c_gpio_read_msg(struct i2c_msg *i2c_msg) {
     }
 }
 
-
-
 void rp_i2c_gpio_send_msg(struct i2c_msg *i2c_msg, uint8_t is_last) {
     // send start condition
     rp_i2c_gpio_set_sda(RP_GPIO_L);
@@ -262,48 +254,40 @@ void rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
     for (uint32_t i = 0; i < read_data.nmsgs; i++) {
         rp_i2c_gpio_send_msg(&(read_data.msgs[i]), i == read_data.nmsgs);
     }
-    if (read_msgs[1].buf[0] != 0) { 
-        printf("data = %02x\n", read_msgs[1].buf[0]);
-    }
 }
 
 void rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
                   uint8_t *write_buf, uint8_t write_size)
 {
-    /* int fd; */
-    /* uint8_t buf[3]; */
+    uint8_t buf[3];
 
-    /* struct i2c_msg write_msgs[1] = { */
-    /*     { */
-    /*         .addr = dev_addr, */
-    /*         .flags = 0, */
-    /*         .len = write_size + 1, */
-    /*         .buf = buf */
-    /*     } */
-    /* }; */
-    /* struct i2c_rdwr_ioctl_data write_data = { */
-    /*     .msgs = write_msgs, */
-    /*     .nmsgs = sizeof(write_msgs)/sizeof(struct i2c_msg) */
-    /* }; */
+    struct i2c_msg write_msgs[1] = {
+        {
+            .addr = dev_addr,
+            .flags = 0,
+            .len = write_size + 1,
+            .buf = buf
+        }
+    };
+    struct i2c_rdwr_ioctl_data write_data = {
+        .msgs = write_msgs,
+        .nmsgs = sizeof(write_msgs)/sizeof(struct i2c_msg)
+    };
 
-    /* if (write_size > 2) { */
-    /*     fprintf(stderr, "FATAL: unexpected write size (at %s:%d)\n", */
-    /*             __FILE__, __LINE__); */
-    /*     exit(EXIT_FAILURE); */
-    /* } */
+    if (write_size > 2) {
+        fprintf(stderr, "FATAL: unexpected write size (at %s:%d)\n",
+                __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
 
-    /* buf[0] = reg_addr; */
+    buf[0] = reg_addr;
+    for (uint8_t i = 0; i < write_size; i++) {
+        buf[i + 1] = write_buf[i];
+    }
 
-    /* for (uint8_t i = 0; i < write_size; i++) { */
-    /*     buf[i + 1] = write_buf[i]; */
-    /* } */
-    /* fd = rp_i2c_open(); */
-    /* if (ioctl(fd, I2C_RDWR, &write_data) < 0) { */
-    /*     fprintf(stderr, "ERROR: ioctl (at %s:%d)\n", */
-    /*             __FILE__, __LINE__); */
-    /*     exit(EXIT_FAILURE); */
-    /* } */
-    /* close(fd); */
+    for (uint32_t i = 0; i < write_data.nmsgs; i++) {
+        rp_i2c_gpio_send_msg(&(write_data.msgs[i]), i == write_data.nmsgs);
+    }
 }
 
 // Local Variables:
