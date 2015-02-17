@@ -13,11 +13,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-
 #include "rp_i2c.h"
 #include "rp_gpio.h"
 
@@ -46,6 +41,13 @@ struct i2c_msg {
 struct i2c_rdwr_ioctl_data {
     struct i2c_msg *msgs;           /* pointers to i2c_msgs                 */
     uint32_t nmsgs;                 /* number of i2c_msgs                   */
+};
+// copy from Linux/arch/arm/include/asm/posix_types.h
+typedef long __kernel_time_t;
+// copy from Linux/include/linux/time.h
+struct timespec {
+    __kernel_time_t tv_sec;         /* seconds */
+    long            tv_nsec;        /* nanoseconds */
 };
 
 void rp_i2c_gpio_sleep(struct timespec *time)
