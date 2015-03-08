@@ -7,7 +7,7 @@
 
 #define LINE_LEN 	20
 
-int main(int argc,char *argv[])
+int main(int __attribute__((unused)) argc ,char __attribute__((unused)) *argv[])
 {
     uint8_t line;
     char buf[LINE_LEN+2];	// 2 = { \n, \0 }
@@ -15,10 +15,10 @@ int main(int argc,char *argv[])
     sc2004c_gpio_assign_t assign;
     assign.rs = 21;
     assign.en = 22;
-    assign.d4 = 24;
-    assign.d5 = 25;
-    assign.d6 = 26;
-    assign.d7 = 27;
+    assign.d4 = 23;
+    assign.d5 = 24;
+    assign.d6 = 25;
+    assign.d7 = 26;
 
     sc2004c_init(&assign);
 
