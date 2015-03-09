@@ -27,30 +27,25 @@
 
 #define BUS_ID  1
 
-void rp_i2c_init()
+int rp_i2c_init()
 {
-
+    return 0;
 }
 
 int rp_i2c_open()
 {
-    int fd;
     char i2c_dev_path[64];
 
     sprintf(i2c_dev_path, "/dev/i2c-%d", BUS_ID);
-    if ((fd = open(i2c_dev_path, O_RDWR)) < 0) {
-        fprintf(stderr, "ERROR: open i2c port (at %s:%d)\n",
-                __FILE__, __LINE__);        
-        exit(EXIT_FAILURE);
-    }
 
-    return fd;
+    return open(i2c_dev_path, O_RDWR);
 }
 
-void rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
-                 uint8_t *read_buf, uint8_t read_size)
+int rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
+                uint8_t *read_buf, uint8_t read_size)
 {
     int fd;
+    int ret;
 
     struct i2c_msg read_msgs[2] = {
         {
@@ -71,19 +66,20 @@ void rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
         .nmsgs = sizeof(read_msgs)/sizeof(struct i2c_msg)
     };
 
-    fd = rp_i2c_open();
-    if (ioctl(fd, I2C_RDWR, &read_data) < 0) {
-        fprintf(stderr, "ERROR: ioctl (at %s:%d)\n",
-                __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
+    if ((fd = rp_i2c_open()) < 0) {
+        return fd;
     }
+    ret = ioctl(fd, I2C_RDWR, &read_data);
     close(fd);
+
+    return (ret < 0) ? ret : 0;
 }
 
-void rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
-                  uint8_t *write_buf, uint8_t write_size)
+int rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
+                 uint8_t *write_buf, uint8_t write_size)
 {
     int fd;
+    int ret;
     uint8_t buf[3];
 
     struct i2c_msg write_msgs[1] = {
@@ -106,81 +102,97 @@ void rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
     }
 
     buf[0] = reg_addr;
-
     for (uint8_t i = 0; i < write_size; i++) {
         buf[i + 1] = write_buf[i];
     }
-    fd = rp_i2c_open();
-    if (ioctl(fd, I2C_RDWR, &write_data) < 0) {
-        fprintf(stderr, "ERROR: ioctl (at %s:%d)\n",
-                __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
+
+    if ((fd = rp_i2c_open()) < 0) {
+        return fd;
     }
+    ret = ioctl(fd, I2C_RDWR, &write_data);
     close(fd);
+
+    return (ret < 0) ? ret : 0;
 }
 
-void rp_i2c_write_verify(uint8_t dev_addr, uint8_t reg_addr,
-                         uint8_t *write_buf, uint8_t write_size)
+int rp_i2c_write_verify(uint8_t dev_addr, uint8_t reg_addr,
+                        uint8_t *write_buf, uint8_t write_size)
 {
     uint8_t *read_buf;
+    int ret;
 
     read_buf = alloca(write_size);
   
-    rp_i2c_write(dev_addr, reg_addr, write_buf, write_size);
-    rp_i2c_read(dev_addr, reg_addr, read_buf, write_size);
+    ret = 0;
+    ret |= rp_i2c_write(dev_addr, reg_addr, write_buf, write_size);
+    ret |= rp_i2c_read(dev_addr, reg_addr, read_buf, write_size);
+
+    if (ret != 0) {
+        return -1;
+    }
 
     for (uint8_t i = 0; i < write_size; i++) {
         if (read_buf[i] != write_buf[i]) {
-            fprintf(stderr, "ERROR: verify (write: %02x, read: %02x (at %s:%d)\n",
-                    write_buf[i], read_buf[i], __FILE__, __LINE__);
-            exit(EXIT_FAILURE);
+            return -2;
         }
     }
+
+    return 0;
 }
 
-void rp_i2c_read16(uint8_t dev_addr, uint8_t reg_addr,
-                   uint16_t *read_buf, uint8_t read_size)
+int rp_i2c_read16(uint8_t dev_addr, uint8_t reg_addr,
+                  uint16_t *read_buf, uint8_t read_size)
 {
-    uint8_t *buf;
+    uint16_t *buf;
+    int ret;
 
-    buf = alloca(read_size * sizeof(uint16_t));
+    buf = (uint16_t *)alloca(read_size * sizeof(uint16_t));
 
-    rp_i2c_read(dev_addr, reg_addr, (uint8_t *)buf, read_size * sizeof(uint16_t));    
+    ret = rp_i2c_read(dev_addr, reg_addr, (uint8_t *)buf, read_size * sizeof(uint16_t));    
     for (uint8_t i = 0; i < read_size; i++) {
         read_buf[i] = be16toh(buf[i]);
     }
+
+    return ret;
 }
 
-void rp_i2c_write16(uint8_t dev_addr, uint8_t reg_addr,
-                    uint16_t *write_buf, uint8_t write_size)
+int rp_i2c_write16(uint8_t dev_addr, uint8_t reg_addr,
+                   uint16_t *write_buf, uint8_t write_size)
 {
-    uint8_t *buf;
+    uint16_t *buf;
 
-    buf = alloca(write_size * sizeof(uint16_t));
+    buf = (uint16_t *)alloca(write_size * sizeof(uint16_t));
     
     for (uint8_t i = 0; i < write_size; i++) {
         buf[i] = htobe16(write_buf[i]);
     }
-    rp_i2c_write(dev_addr, reg_addr, (uint8_t *)buf, write_size * sizeof(uint16_t));
+
+    return rp_i2c_write(dev_addr, reg_addr, (uint8_t *)buf, write_size * sizeof(uint16_t));
 }
 
-void rp_i2c_write_verify16(uint8_t dev_addr, uint8_t reg_addr,
-                           uint16_t *write_buf, uint8_t write_size)
+int rp_i2c_write_verify16(uint8_t dev_addr, uint8_t reg_addr,
+                          uint16_t *write_buf, uint8_t write_size)
 {
     uint16_t *read_buf;
+    int ret;
 
     read_buf = alloca(write_size);
-  
-    rp_i2c_write16(dev_addr, reg_addr, write_buf, write_size);
-    rp_i2c_read16(dev_addr, reg_addr, read_buf, write_size);
+
+    ret = 0;
+    ret |= rp_i2c_write16(dev_addr, reg_addr, write_buf, write_size);
+    ret |= rp_i2c_read16(dev_addr, reg_addr, read_buf, write_size);
+
+    if (ret != 0) {
+        return -1;
+    }
 
     for (uint8_t i = 0; i < write_size; i++) {
         if (read_buf[i] != write_buf[i]) {
-            fprintf(stderr, "ERROR: verify (write: %04x, read: %04x (at %s:%d)\n",
-                    write_buf[i], read_buf[i], __FILE__, __LINE__);
-            exit(EXIT_FAILURE);
+            return -2;
         }
     }
+
+    return 0;
 }
 
 // Local Variables:

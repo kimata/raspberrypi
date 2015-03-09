@@ -18,11 +18,13 @@ int main(int argc, char *argv[])
     ina226prc_conf_t conf;
     
     conf.shunt_mohm		= 25; // 25mƒ¶
+    conf.mode			= INA226PRC_MODE_BOTH_CONT;
     conf.average_number	= INA226PRC_AVG_16;
     conf.bus_conv_time	= INA226PRC_CONV_332US;
     conf.shunt_conv_time= INA226PRC_CONV_332US;
 
     ina226prc_init(dev_addr, &conf);
+    ina226prc_sense(dev_addr, NULL);
 
     return EXIT_SUCCESS;
 }
