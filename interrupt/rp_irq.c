@@ -21,8 +21,8 @@
 #include "rp_irq.h"
 
 #define GPIO_PIN_COUNT          28
-#define TIMEOUT_MSEC    		(10 * 1000) // 10sec
-#define NOTIFY_THRESHOLD  		10
+#define TIMEOUT_MSEC    		100 // 100 ms
+#define NOTIFY_THRESHOLD  		3
 
 static int rp_irq_file_open(const char *path, int flags)
 {
@@ -169,37 +169,35 @@ rp_irq_stat_t rp_irq_get_stat(uint8_t pin_no)
 
 void rp_irq_watch_stat(uint8_t pin_no, pid_t parent)
 {
-    struct timespec check_interval = { 0, 1 * 1E6 }; // 1ms (but, actually 10ms on default kernel)
-    static uint8_t stat_cur_count = 0;
     rp_irq_handle_t handle;
-    rp_irq_stat_t stat_prev;
+    rp_irq_stat_t stat_prev = 0;
+    uint8_t need_notify = 0;
+    uint8_t timeout_count = 0;
 
     setpriority(PRIO_PROCESS, 0, 19);
     rp_irq_init(pin_no, &handle);    
- WATCH_START:
+
     while (1) {
         stat_prev = rp_irq_wait(&handle, TIMEOUT_MSEC);
         if (stat_prev == RP_IRQ_STAT_TIMEOUT) {
-            continue;
-        }
-        while (1) {
-            rp_irq_stat_t stat = rp_irq_get_stat(pin_no);
-            if (stat == stat_prev) {
-                // MEMO: remove chattering
-                stat_cur_count++;
-                if (stat_cur_count == NOTIFY_THRESHOLD) {
-                    if (kill(parent, SIGUSR1) != 0) {
-                        fprintf(stderr, "ERROR: kill (at %s:%d)\n", __FILE__, __LINE__);
-                        exit(EXIT_FAILURE);
-                    }
-                    stat_cur_count = 0;
-                    goto WATCH_START;
-                }
-            } else {
-                stat_prev = stat;
-                stat_cur_count = 0;
+            timeout_count++;
+            // NOTE: remove chattering
+            if ((need_notify == 0) || (timeout_count < NOTIFY_THRESHOLD)) {
+                continue;
             }
-            nanosleep(&check_interval, NULL);
+            rp_irq_stat_t stat = rp_irq_get_stat(pin_no);
+            if (stat != stat_prev) {
+                stat_prev = stat;
+                if (kill(parent, SIGUSR1) != 0) {
+                    fprintf(stderr, "ERROR: kill (at %s:%d)\n", __FILE__, __LINE__);
+                    exit(EXIT_FAILURE);
+                }
+            }
+            need_notify = 0;
+            timeout_count = 0;
+            continue;
+        } else {
+            need_notify = 1; // NOTE: IRQ occured.
         }
     }
 }
