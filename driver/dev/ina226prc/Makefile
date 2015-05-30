@@ -13,7 +13,7 @@ TEST_APP	:= ina226prc.test
 TEST_SRC	:= test.c
 
 LIB_PATH        := ../../common
-DEP_LIB		:= $(LIB_PATH)/lib/librp_lib.a $(LIB_PATH)/i2c/librp_i2c.a
+DEP_LIB		:= $(LIB_PATH)/i2c/librp_i2c.a $(LIB_PATH)/lib/librp_lib.a
 
 INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
 CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3 $(INCLUDES)

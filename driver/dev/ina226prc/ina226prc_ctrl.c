@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <endian.h>
 
+#include "rp_lib.h"
 #include "rp_i2c.h"
 #include "ina226prc_ctrl.h"
 
@@ -33,13 +34,10 @@ void ina226prc_init(uint8_t dev_addr, ina226prc_conf_t *conf)
         (conf->mode << 0);
     ret |= rp_i2c_write_verify16(dev_addr, INA226PRC_REG_CONF, &reg_value, 1);
 
-    for (uint32_t i = 0; i < 10; i++) {
-        __asm__ volatile("nop");
-    }
-
-
+    /* rp_sleep(10000000000); */
+    rp_sleep(100000);
     reg_value = (uint16_t)(51200 / conf->shunt_mohm);
-    ret |= rp_i2c_write_verify16(dev_addr, INA226PRC_REG_CALIB, &reg_value, 1);
+    rp_i2c_write_verify16(dev_addr, INA226PRC_REG_CALIB, &reg_value, 1);
     
     printf("ret = %d\n", ret);
 }
@@ -50,7 +48,7 @@ void ina226prc_sense(uint8_t dev_addr, ina226prc_value_t *value)
     uint16_t reg_value;    
     /* rp_i2c_read16(dev_addr, INA226PRC_REG_BUS_VOL, &reg_value, 1); */
 
-    printf("vol = %d\n", reg_value);
+    /* printf("vol = %d\n", reg_value); */
 
     /* @i2c.write(0x02) */
     /* @v_val = conver_signed(@i2c.read(2)) */
