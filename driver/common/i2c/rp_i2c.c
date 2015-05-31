@@ -23,7 +23,6 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 
-#include "rp_lib.h"
 #include "rp_i2c.h"
 
 #define BUS_ID      1
@@ -50,33 +49,24 @@ int rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
     int fd;
     int ret;
 
-    struct i2c_msg read_msgs[2] = {
-        {
-            .addr = dev_addr,
-            .flags = 0,
-            .len = 1,
-            .buf = &reg_addr
-        },
-        {
-            .addr = dev_addr,
-            .flags = I2C_M_RD,
-            .len = read_size,
-            .buf = read_buf
-        }
-    };
-    struct i2c_rdwr_ioctl_data read_data = {
-        .msgs = read_msgs,
-        .nmsgs = sizeof(read_msgs)/sizeof(struct i2c_msg)
-    };
-
     if ((fd = rp_i2c_open()) < 0) {
         return fd;
     }
-    ret = ioctl(fd, I2C_RDWR, &read_data);
+
+    if ((ret = ioctl(fd, I2C_SLAVE, dev_addr)) < 0) {
+        return ret;
+    }
+
+    if ((ret = write(fd, &reg_addr, sizeof(reg_addr))) != sizeof(reg_addr)) {
+        return ret;
+    }
+    if ((ret = read(fd, read_buf, read_size)) != read_size) {
+        return ret;
+    }
 
     close(fd);
 
-    return (ret < 0) ? ret : 0;
+    return 0;
 }
 
 int rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
@@ -84,27 +74,9 @@ int rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
 {
     int fd;
     int ret;
-    uint8_t buf[3];
+    uint8_t *buf;
 
-    struct i2c_msg write_msgs[1] = {
-        {
-            .addr = dev_addr,
-            .flags = 0,
-            .len = write_size + 1,
-            .buf = buf
-        }
-    };
-    struct i2c_rdwr_ioctl_data write_data = {
-        .msgs = write_msgs,
-        .nmsgs = sizeof(write_msgs)/sizeof(struct i2c_msg)
-    };
-
-    if (write_size > 2) {
-        fprintf(stderr, "FATAL: unexpected write size (at %s:%d)\n",
-                __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
-    }
-
+    buf = alloca(write_size + 1);
     buf[0] = reg_addr;
     for (uint8_t i = 0; i < write_size; i++) {
         buf[i + 1] = write_buf[i];
@@ -113,10 +85,18 @@ int rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
     if ((fd = rp_i2c_open()) < 0) {
         return fd;
     }
-    ret = ioctl(fd, I2C_RDWR, &write_data);
+
+    if ((ret = ioctl(fd, I2C_SLAVE, dev_addr)) < 0) {
+        return ret;
+    }
+
+    if ((ret = write(fd, buf, write_size+1)) != (write_size+1)) {
+        return ret;
+    }
+
     close(fd);
 
-    return (ret < 0) ? ret : 0;
+    return 0;
 }
 
 int rp_i2c_write_verify(uint8_t dev_addr, uint8_t reg_addr,

@@ -6,8 +6,8 @@
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, version 2.
 
-LIB     	:= librp_i2c.a
-LIB_SRCS  	:= rp_i2c.c
+LIB     	:= librp_i2c_ioctl.a
+LIB_SRCS  	:= rp_i2c_ioctl.c
 
 CFLAGS 		:= -Wall -Wextra -std=c99 -O3 -fPIC -pipe
 LDFLAGS 	:= -Wall

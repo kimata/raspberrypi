@@ -18,8 +18,8 @@
 #define ADT7410_REG_STAT	0x02
 #define ADT7410_REG_CONF	0x03
 
-void adt7410_init(uint8_t dev_addr);
-float adt7410_sense(uint8_t dev_addr);
+int adt7410_init(uint8_t dev_addr);
+int adt7410_sense(uint8_t dev_addr, float *value);
 
 #endif
 

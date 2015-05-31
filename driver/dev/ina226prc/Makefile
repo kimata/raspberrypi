@@ -6,36 +6,37 @@
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, version 2.
 
-DRV     	:= libina226prc_ctrl.a
-DRV_SRCS  	:= ina226prc_ctrl.c
+LIB     	:= libina226prc_ctrl.a
+LIB_SRCS        := ina226prc_ctrl.c
 
 TEST_APP	:= ina226prc.test
 TEST_SRC	:= test.c
+TEST_LIB_PATH   := 
+TEST_LIB	:= 
 
-LIB_PATH        := ../../common
-DEP_LIB		:= $(LIB_PATH)/i2c/librp_i2c.a $(LIB_PATH)/lib/librp_lib.a
+DEP_LIB_PATH    := ../../common
+DEP_LIB		:= $(DEP_LIB_PATH)/lib/librp_lib.a $(DEP_LIB_PATH)/i2c/librp_i2c.a
 
 INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
-CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3 $(INCLUDES)
+CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3
 LDFLAGS 	:= -Wall
 
-lib: $(DRV)
+CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O0
+LDFLAGS 	:= -Wall
+
+lib: $(LIB)
 test: $(TEST_APP)
 
-$(DEP_LIB):
-	make -C $(LIB_PATH)
-
-$(DRV): $(subst .c,.o,$(DRV_SRCS)) 
+$(LIB): $(subst .c,.o,$(LIB_SRCS)) 
 	ar r $@ $^
 
-$(TEST_APP): $(TEST_SRC) $(DRV) $(DEP_LIB)
-	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst lib%.a,-l%,$(DRV) $(DEP_LIB))
+$(TEST_APP): $(TEST_SRC) $(LIB) $(TEST_LIB)
+	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst -llib%.a,%,$(LIB)) $(patsubst %,-L %,$(dir $(DEP_LIB) $(TEST_LIB))) $(patsubst -llib%.a,%,$(DEP_LIB) $(TEST_LIB))
 
 %.o: %.c
-	gcc $(CFLAGS) -c -o $@ $< 
+	gcc $(CFLAGS) -c $(INCLUDES) -o $@ $< 
 
 clean:
-	make -C $(LIB_PATH) $@
 	rm -f *.o *.a *~ $(TEST_APP)
 
 .SUFFIXES: .c .h .o .a .test

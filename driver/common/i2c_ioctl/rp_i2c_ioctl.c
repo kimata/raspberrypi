@@ -1,5 +1,5 @@
 /*
- * Raspberry Pi I2C Driver
+ * Raspberry Pi I2C Driver (using ioctl)
  *
  * Copyright (C) 2015 Tetsuya Kimata <kimata@green-rabbit.net>
  *
@@ -23,19 +23,18 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 
-#include "rp_lib.h"
-#include "rp_i2c.h"
+#include "rp_i2c_ioctl.h"
 
 #define BUS_ID      1
 #define RETRY_COUNT 5
 #define SLEEP_CYCLE 1000000
 
-int rp_i2c_init()
+int rp_i2c_init_ioctl()
 {
     return 0;
 }
 
-int rp_i2c_open()
+int rp_i2c_open_ioctl()
 {
     char i2c_dev_path[64];
 
@@ -44,8 +43,8 @@ int rp_i2c_open()
     return open(i2c_dev_path, O_RDWR);
 }
 
-int rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
-                uint8_t *read_buf, uint8_t read_size)
+int rp_i2c_read_ioctl(uint8_t dev_addr, uint8_t reg_addr,
+                      uint8_t *read_buf, uint8_t read_size)
 {
     int fd;
     int ret;
@@ -69,7 +68,7 @@ int rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
         .nmsgs = sizeof(read_msgs)/sizeof(struct i2c_msg)
     };
 
-    if ((fd = rp_i2c_open()) < 0) {
+    if ((fd = rp_i2c_open_ioctl()) < 0) {
         return fd;
     }
     ret = ioctl(fd, I2C_RDWR, &read_data);
@@ -79,12 +78,14 @@ int rp_i2c_read(uint8_t dev_addr, uint8_t reg_addr,
     return (ret < 0) ? ret : 0;
 }
 
-int rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
-                 uint8_t *write_buf, uint8_t write_size)
+int rp_i2c_write_ioctl(uint8_t dev_addr, uint8_t reg_addr,
+                       uint8_t *write_buf, uint8_t write_size)
 {
     int fd;
     int ret;
-    uint8_t buf[3];
+    uint8_t *buf;
+
+    buf = alloca(write_size + 1);
 
     struct i2c_msg write_msgs[1] = {
         {
@@ -99,18 +100,12 @@ int rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
         .nmsgs = sizeof(write_msgs)/sizeof(struct i2c_msg)
     };
 
-    if (write_size > 2) {
-        fprintf(stderr, "FATAL: unexpected write size (at %s:%d)\n",
-                __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
-    }
-
     buf[0] = reg_addr;
     for (uint8_t i = 0; i < write_size; i++) {
         buf[i + 1] = write_buf[i];
     }
 
-    if ((fd = rp_i2c_open()) < 0) {
+    if ((fd = rp_i2c_open_ioctl()) < 0) {
         return fd;
     }
     ret = ioctl(fd, I2C_RDWR, &write_data);
@@ -119,8 +114,8 @@ int rp_i2c_write(uint8_t dev_addr, uint8_t reg_addr,
     return (ret < 0) ? ret : 0;
 }
 
-int rp_i2c_write_verify(uint8_t dev_addr, uint8_t reg_addr,
-                        uint8_t *write_buf, uint8_t write_size)
+int rp_i2c_write_verify_ioctl(uint8_t dev_addr, uint8_t reg_addr,
+                              uint8_t *write_buf, uint8_t write_size)
 {
     uint8_t *read_buf;
     int ret;
@@ -128,8 +123,8 @@ int rp_i2c_write_verify(uint8_t dev_addr, uint8_t reg_addr,
     read_buf = alloca(write_size);
   
     ret = 0;
-    ret |= rp_i2c_write(dev_addr, reg_addr, write_buf, write_size);
-    ret |= rp_i2c_read(dev_addr, reg_addr, read_buf, write_size);
+    ret |= rp_i2c_write_ioctl(dev_addr, reg_addr, write_buf, write_size);
+    ret |= rp_i2c_read_ioctl(dev_addr, reg_addr, read_buf, write_size);
 
     if (ret != 0) {
         return -1;
@@ -144,15 +139,15 @@ int rp_i2c_write_verify(uint8_t dev_addr, uint8_t reg_addr,
     return 0;
 }
 
-int rp_i2c_read16(uint8_t dev_addr, uint8_t reg_addr,
-                  uint16_t *read_buf, uint8_t read_size)
+int rp_i2c_read16_ioctl(uint8_t dev_addr, uint8_t reg_addr,
+                        uint16_t *read_buf, uint8_t read_size)
 {
     uint16_t *buf;
     int ret;
 
     buf = (uint16_t *)alloca(read_size * sizeof(uint16_t));
 
-    ret = rp_i2c_read(dev_addr, reg_addr, (uint8_t *)buf, read_size * sizeof(uint16_t));    
+    ret = rp_i2c_read_ioctl(dev_addr, reg_addr, (uint8_t *)buf, read_size * sizeof(uint16_t));    
     for (uint8_t i = 0; i < read_size; i++) {
         read_buf[i] = be16toh(buf[i]);
     }
@@ -160,8 +155,8 @@ int rp_i2c_read16(uint8_t dev_addr, uint8_t reg_addr,
     return ret;
 }
 
-int rp_i2c_write16(uint8_t dev_addr, uint8_t reg_addr,
-                   uint16_t *write_buf, uint8_t write_size)
+int rp_i2c_write16_ioctl(uint8_t dev_addr, uint8_t reg_addr,
+                         uint16_t *write_buf, uint8_t write_size)
 {
     uint16_t *buf;
 
@@ -171,11 +166,11 @@ int rp_i2c_write16(uint8_t dev_addr, uint8_t reg_addr,
         buf[i] = htobe16(write_buf[i]);
     }
 
-    return rp_i2c_write(dev_addr, reg_addr, (uint8_t *)buf, write_size * sizeof(uint16_t));
+    return rp_i2c_write_ioctl(dev_addr, reg_addr, (uint8_t *)buf, write_size * sizeof(uint16_t));
 }
 
-int rp_i2c_write_verify16(uint8_t dev_addr, uint8_t reg_addr,
-                          uint16_t *write_buf, uint8_t write_size)
+int rp_i2c_write_verify16_ioctl(uint8_t dev_addr, uint8_t reg_addr,
+                                uint16_t *write_buf, uint8_t write_size)
 {
     uint16_t *read_buf;
     int ret;
@@ -183,8 +178,8 @@ int rp_i2c_write_verify16(uint8_t dev_addr, uint8_t reg_addr,
     read_buf = alloca(write_size);
 
     ret = 0;
-    ret |= rp_i2c_write16(dev_addr, reg_addr, write_buf, write_size);
-    ret |= rp_i2c_read16(dev_addr, reg_addr, read_buf, write_size);
+    ret |= rp_i2c_write16_ioctl(dev_addr, reg_addr, write_buf, write_size);
+    ret |= rp_i2c_read16_ioctl(dev_addr, reg_addr, read_buf, write_size);
 
     if (ret != 0) {
         return -1;

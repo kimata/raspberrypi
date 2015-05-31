@@ -15,15 +15,11 @@ TEST_LIB_PATH   :=
 TEST_LIB	:= 
 
 DEP_LIB_PATH    := ../../common
-DEP_LIB		:= $(DEP_LIB_PATH)/i2c/librp_i2c.a
-
+DEP_LIB		:= $(DEP_LIB_PATH)/i2c_ioctl/librp_i2c_ioctl.a
 
 INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
 CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3
 LDFLAGS 	:= -Wall
-
-
-TEST_LIBS  	:= rp_i2c.c adt7410_ctrl.c
 
 CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O0
 LDFLAGS 	:= -Wall

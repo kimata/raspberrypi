@@ -5,10 +5,16 @@
 
 #include "adt7410_ctrl.h"
 
-void sense(uint8_t dev_addr)
+int sense(uint8_t dev_addr)
 {
-    float v = adt7410_sense(dev_addr);
-    printf("temp: %.2f\n", v);
+    float temp;
+    int ret;
+
+    if ((ret = adt7410_sense(dev_addr, &temp)) == 0) {
+        printf("temp: %.2f\n", temp);
+    }
+
+    return ret;
 }
 
 #pragma GCC diagnostic push
@@ -25,10 +31,14 @@ int main(int argc, char *argv[])
 
     dev_addr = strtol(argv[1], &err_char, 0);
 
-    adt7410_init(dev_addr);
+    if (adt7410_init(dev_addr) != 0) {
+        return EXIT_FAILURE;
+    }
 
     while (1) {
-        sense(dev_addr);
+        if (sense(dev_addr) !=0) {
+            return EXIT_FAILURE;
+        }
         sleep(1);
     }
 

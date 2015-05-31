@@ -1,5 +1,5 @@
 /*
- * Raspberry Pi ADT7410 Utility
+ * ADT7410 Driver
  *
  * Copyright (C) 2014 Tetsuya Kimata <kimata@green-rabbit.net>
  *
@@ -8,50 +8,51 @@
  * published by the Free Software Foundation, version 2.
  *
  */
-
-// To use this program, it is required to activate I2C restart.
-// Write "options i2c_bcm2708 combined=1" to /etc/modprobe.d/i2c.conf.
-
 #define _BSD_SOURCE
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <endian.h>
 
-#include "rp_i2c.h"
+#include "rp_i2c_ioctl.h"
 #include "adt7410_ctrl.h"
 
-void adt7410_init(uint8_t dev_addr)
+int adt7410_init(uint8_t dev_addr)
 {
     uint8_t conf = 1 << 7;
     uint8_t buf;
+    int ret = 0;
 
-    rp_i2c_init();
-    rp_i2c_write(dev_addr, ADT7410_REG_CONF, (uint8_t *)&conf, sizeof(conf));
-    rp_i2c_read(dev_addr, ADT7410_REG_CONF, (uint8_t *)&buf, sizeof(buf));
+    ret |= rp_i2c_init_ioctl();
+    ret |= rp_i2c_write_ioctl(dev_addr, ADT7410_REG_CONF, (uint8_t *)&conf, sizeof(conf));
+    ret |= rp_i2c_read_ioctl(dev_addr, ADT7410_REG_CONF, (uint8_t *)&buf, sizeof(buf));
 
     // MEMO: verify
     if (buf != conf) {
-        fprintf(stderr, "(buf, conf) = (%x, %x)\n", buf, conf);
-        fprintf(stderr, "ERROR: write conf reg (at %s:%d)\n",
-                __FILE__, __LINE__);
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "ERROR: verify conf reg (write, read) = (%x, %x) (at %s:%d)\n",
+                conf, buf, __FILE__, __LINE__);
+        return -1;
     }
+
+    return ret;
 }
 
-float adt7410_sense(uint8_t dev_addr)
+int adt7410_sense(uint8_t dev_addr, float *value)
 {
     uint16_t buf;
     int16_t val;
+    int ret = 0;
 
-    rp_i2c_read(dev_addr, ADT7410_REG_TEMP, (uint8_t *)&buf, sizeof(buf));
+    ret = rp_i2c_read_ioctl(dev_addr, ADT7410_REG_TEMP, (uint8_t *)&buf, sizeof(buf));
 
     val = (int16_t)be16toh(buf);
     if (val & 0x8000) {
         val -= 65536;
     }
 
-    return val / 128.0;
+    *value = val / 128.0;
+
+    return ret;
 }
 
 // Local Variables:

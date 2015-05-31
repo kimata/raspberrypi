@@ -73,8 +73,8 @@ typedef struct {
     float                   power;
 } ina226prc_value_t;
 
-void ina226prc_init(uint8_t dev_addr, ina226prc_conf_t *conf);
-void ina226prc_sense(uint8_t dev_addr, ina226prc_value_t *value);
+int ina226prc_init(uint8_t dev_addr, ina226prc_conf_t *conf);
+int ina226prc_sense(uint8_t dev_addr, ina226prc_value_t *value);
 
 #endif
 
