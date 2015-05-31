@@ -12,6 +12,8 @@ int main(int __attribute__((unused)) argc ,char __attribute__((unused)) *argv[])
     char buf[LINE_LEN+2];	// 2 = { \n, \0 }
 
     sc2004c_gpio_assign_t assign;
+    
+    // NOTE: pin assign
     assign.rs = 21;
     assign.en = 22;
     assign.d4 = 23;
