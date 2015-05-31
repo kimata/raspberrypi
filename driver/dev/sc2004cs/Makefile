@@ -7,12 +7,22 @@
 # published by the Free Software Foundation, version 2.
 
 LIB     	:= libsc2004c_ctrl.a
-LIB_SRCS  	:= sc2004c_ctrl.c rp_gpio.c
+LIB_SRCS        := sc2004c_ctrl.c
 
 TEST_APP	:= sc2004cs.test
 TEST_SRC	:= test.c
+TEST_LIB_PATH   := 
+TEST_LIB	:= 
 
-CFLAGS 		:= -Wall -Wextra -std=c99 -O3 -fPIC -pipe
+DEP_LIB_PATH    := ../../common
+DEP_LIB		:= $(DEP_LIB_PATH)/gpio/librp_gpio.a
+
+
+INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
+CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3
+LDFLAGS 	:= -Wall
+
+CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O0
 LDFLAGS 	:= -Wall
 
 lib: $(LIB)
@@ -21,11 +31,11 @@ test: $(TEST_APP)
 $(LIB): $(subst .c,.o,$(LIB_SRCS)) 
 	ar r $@ $^
 
-$(TEST_APP): $(TEST_SRC) $(LIB)
-	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. -l$(patsubst lib%.a,%,$(LIB))
+$(TEST_APP): $(TEST_SRC) $(LIB) $(TEST_LIB)
+	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst -llib%.a,%,$(LIB)) $(patsubst %,-L %,$(dir $(DEP_LIB) $(TEST_LIB))) $(patsubst -llib%.a,%,$(DEP_LIB) $(TEST_LIB))
 
 %.o: %.c
-	gcc $(CFLAGS) -c -o $@ $< 
+	gcc $(CFLAGS) -c $(INCLUDES) -o $@ $< 
 
 clean:
 	rm -f *.o *.a *~ $(TEST_APP)

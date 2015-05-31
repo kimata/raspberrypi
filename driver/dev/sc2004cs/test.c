@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rp_gpio.h"
 #include "sc2004c_ctrl.h"
 
 #define LINE_LEN 	20
