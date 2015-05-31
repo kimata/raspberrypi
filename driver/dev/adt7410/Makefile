@@ -11,11 +11,15 @@ LIB_SRCS        := adt7410_ctrl.c
 
 TEST_APP	:= adt7410.test
 TEST_SRC	:= test.c
-TEST_LIB_PATH   := ../../common
-TEST_LIB	:= $(TEST_LIB_PATH)/i2c/librp_i2c.a
+TEST_LIB_PATH   := 
+TEST_LIB	:= 
+
+DEP_LIB_PATH    := ../../common
+DEP_LIB		:= $(DEP_LIB_PATH)/i2c/librp_i2c.a
+
 
 INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
-CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3 $(INCLUDES)
+CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3
 LDFLAGS 	:= -Wall
 
 
@@ -31,10 +35,10 @@ $(LIB): $(subst .c,.o,$(LIB_SRCS))
 	ar r $@ $^
 
 $(TEST_APP): $(TEST_SRC) $(LIB) $(TEST_LIB)
-	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst -llib%.a,%,$(LIB)) $(patsubst %,-L %,$(dir $(TEST_LIB))) $(patsubst -llib%.a,%,$(TEST_LIB))
+	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst -llib%.a,%,$(LIB)) $(patsubst %,-L %,$(dir $(DEP_LIB) $(TEST_LIB))) $(patsubst -llib%.a,%,$(DEP_LIB) $(TEST_LIB))
 
 %.o: %.c
-	gcc $(CFLAGS) -c -o $@ $< 
+	gcc $(CFLAGS) -c $(INCLUDES) -o $@ $< 
 
 clean:
 	rm -f *.o *.a *~ $(TEST_APP)
