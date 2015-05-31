@@ -6,7 +6,7 @@
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, version 2.
 
-LIBS     	:= lib/librp_lib.a i2c/librp_i2c.a
+LIBS     	:= lib/librp_lib.a i2c/librp_i2c.a i2c/librp_i2c.a interrupt/librp_irq.a
 
 all: $(LIBS)
 
