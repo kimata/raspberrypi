@@ -16,7 +16,19 @@
 #include <endian.h>
 
 #include "rp_lib.h"
+
+#ifdef I2C_IOCTL
+#include "rp_i2c_ioctl.h"
+#define rp_i2c_init(...) 			rp_i2c_init_ioctl(__VA_ARGS__)
+#define rp_i2c_read(...) 			rp_i2c_read_ioctl(__VA_ARGS__)
+#define rp_i2c_write(...) 			rp_i2c_write_ioctl(__VA_ARGS__)
+#define rp_i2c_write_verify(...) 	rp_i2c_write_verify_ioctl(__VA_ARGS__)
+#define rp_i2c_read16(...)			rp_i2c_read16_ioctl(__VA_ARGS__)
+#define rp_i2c_write16(...)			rp_i2c_write16_ioctl(__VA_ARGS__)
+#define rp_i2c_write_verify16(...)	rp_i2c_write_verify16_ioctl(__VA_ARGS__)
+#else
 #include "rp_i2c.h"
+#endif
 #include "ina226prc_ctrl.h"
 
 static float ina226prc_calc_voltage(uint16_t value)

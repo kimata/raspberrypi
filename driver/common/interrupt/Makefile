@@ -12,6 +12,10 @@ LIB_SRCS  	:= rp_irq.c
 TEST_APP	:= rp_irq.test
 TEST_SRC	:= test.c
 
+DEP_LIB_PATH    := 
+DEP_LIB		:= 
+
+INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
 CFLAGS 		:= -Wall -Wextra -std=c99 -O3 -fPIC -pipe
 LDFLAGS 	:= -Wall
 
@@ -21,11 +25,11 @@ test: $(TEST_APP)
 $(LIB): $(subst .c,.o,$(LIB_SRCS)) 
 	ar r $@ $^
 
-$(TEST_APP): $(TEST_SRC) $(LIB)
-	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. -l$(patsubst lib%.a,%,$(LIB))
+$(TEST_APP): $(TEST_SRC) $(LIB) $(DEP_LIBS) $(TEST_LIB)
+	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst -llib%.a,%,$(LIB)) $(patsubst %,-L %,$(dir $(DEP_LIB) $(TEST_LIB))) $(patsubst -llib%.a,%,$(DEP_LIB) $(TEST_LIB))
 
 %.o: %.c
-	gcc $(CFLAGS) -c -o $@ $< 
+	gcc $(CFLAGS) -c $(INCLUDES) -o $@ $< 
 
 clean:
 	rm -f *.o *.a *~ $(TEST_APP)

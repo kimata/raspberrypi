@@ -18,20 +18,25 @@ int sense(uint8_t dev_addr)
     return ret;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 int main(int argc, char *argv[])
 {
     uint8_t dev_addr;
     char *err_char;
     ina226prc_conf_t conf;
+    uint32_t count;
+    uint32_t i;
 
-    if (argc != 2) {
-        fprintf(stderr, "USAGE: %s  DEV_ADDR\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "USAGE: %s  DEV_ADDR [COUNT]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
     dev_addr = strtol(argv[1], &err_char, 0);
+    if (argc == 3) {
+        count = strtol(argv[2], &err_char, 0);
+    } else {
+        count = 0;
+    }
 
     conf.shunt_mohm		= 25; // 25mƒ¶
     conf.mode			= INA226PRC_MODE_BOTH_CONT;
@@ -43,16 +48,19 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    i = 0;
     while (1) {
         if (sense(dev_addr) !=0) {
             return EXIT_FAILURE;
+        }
+        if (++i == count) {
+            break;
         }
         sleep(1);
     }
 
     return EXIT_SUCCESS;
 }
-#pragma GCC diagnostic pop
 
 // Local Variables:
 // coding: shift_jis-unix

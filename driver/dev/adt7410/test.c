@@ -17,8 +17,6 @@ int sense(uint8_t dev_addr)
     return ret;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 int main(int argc, char *argv[])
 {
     uint8_t dev_addr;
@@ -44,7 +42,6 @@ int main(int argc, char *argv[])
 
     return EXIT_SUCCESS;
 }
-#pragma GCC diagnostic pop
 
 // Local Variables:
 // coding: shift_jis-unix

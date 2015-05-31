@@ -22,7 +22,7 @@
 
 #define GPIO_PIN_COUNT          28
 #define TIMEOUT_MSEC    		100 // 100 ms
-#define NOTIFY_THRESHOLD  		3
+#define NOTIFY_THRESHOLD  		8
 
 static int rp_irq_file_open(const char *path, int flags)
 {

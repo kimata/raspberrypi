@@ -15,14 +15,10 @@ TEST_LIB_PATH   :=
 TEST_LIB	:= 
 
 DEP_LIB_PATH    := ../../common
-DEP_LIB		:= $(DEP_LIB_PATH)/gpio/librp_gpio.a
+DEP_LIBS	:= $(DEP_LIB_PATH)/gpio/librp_gpio.a
 
-
-INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
+INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIBS)))
 CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3
-LDFLAGS 	:= -Wall
-
-CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O0
 LDFLAGS 	:= -Wall
 
 lib: $(LIB)
@@ -31,8 +27,12 @@ test: $(TEST_APP)
 $(LIB): $(subst .c,.o,$(LIB_SRCS)) 
 	ar r $@ $^
 
-$(TEST_APP): $(TEST_SRC) $(LIB) $(TEST_LIB)
-	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst -llib%.a,%,$(LIB)) $(patsubst %,-L %,$(dir $(DEP_LIB) $(TEST_LIB))) $(patsubst -llib%.a,%,$(DEP_LIB) $(TEST_LIB))
+$(TEST_APP): $(TEST_SRC) $(LIB) $(DEP_LIBS) $(TEST_LIBS)
+	@LIB_DIRS="$(dir $(DEP_LIBS) $(TEST_LIBS))"; \
+	for i in $$LIB_DIRS; do \
+	    make -C $$i; \
+	done
+	gcc -o $@ $< $(CFLAGS) $(LDFLAGS) -L. $(patsubst lib%.a,-l%,$(LIB)) $(patsubst %,-L %,$(dir $(DEP_LIBS) $(TEST_LIBS))) $(patsubst lib%.a,-l%, $(notdir $(DEP_LIBS) $(TEST_LIBS)))
 
 %.o: %.c
 	gcc $(CFLAGS) -c $(INCLUDES) -o $@ $< 

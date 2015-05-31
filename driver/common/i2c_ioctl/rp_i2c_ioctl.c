@@ -52,13 +52,13 @@ int rp_i2c_read_ioctl(uint8_t dev_addr, uint8_t reg_addr,
     struct i2c_msg read_msgs[2] = {
         {
             .addr = dev_addr,
-            .flags = 0,
+            .flags = I2C_M_IGNORE_NAK,
             .len = 1,
             .buf = &reg_addr
         },
         {
             .addr = dev_addr,
-            .flags = I2C_M_RD,
+            .flags = I2C_M_RD|I2C_M_IGNORE_NAK,
             .len = read_size,
             .buf = read_buf
         }
@@ -90,7 +90,7 @@ int rp_i2c_write_ioctl(uint8_t dev_addr, uint8_t reg_addr,
     struct i2c_msg write_msgs[1] = {
         {
             .addr = dev_addr,
-            .flags = 0,
+            .flags = I2C_M_IGNORE_NAK,
             .len = write_size + 1,
             .buf = buf
         }
