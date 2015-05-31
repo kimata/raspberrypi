@@ -9,11 +9,7 @@
 LIB     	:= librp_i2c.a
 LIB_SRCS  	:= rp_i2c.c
 
-LIB_PATH        := ../../common
-DEP_LIB		:= $(LIB_PATH)/lib/librp_lib.a
-
-INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIB)))
-CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3 $(INCLUDES)
+CFLAGS 		:= -Wall -Wextra -std=c99 -O3 -fPIC -pipe
 LDFLAGS 	:= -Wall
 
 lib: $(LIB)
@@ -22,7 +18,7 @@ $(LIB): $(subst .c,.o,$(LIB_SRCS))
 	ar r $@ $^
 
 %.o: %.c
-	gcc $(CFLAGS) -c -o $@ $< 
+	gcc $(CFLAGS) -c $(INCLUDES) -o $@ $<
 
 clean:
 	rm -f *.o *.a *~ $(TEST_APP)
