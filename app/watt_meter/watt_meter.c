@@ -126,8 +126,8 @@ static int disp_stat(ina226prc_value_t *measure_hist, uint32_t hist_size)
     calc_stat(measure_hist, hist_size, &measure_min, &measure_max, &measure_ave);
 
     snprintf(lcd_line_buf, sizeof(lcd_line_buf), "%c%c%c%c   ave  max  min", 
-             indi_char[(indi_idx % 4) == 3], indi_char[(indi_idx % 4) == 2], 
-             indi_char[(indi_idx % 4) == 1], indi_char[(indi_idx % 4) == 0]);
+             indi_char[(indi_idx % 4) == 0], indi_char[(indi_idx % 4) == 1], 
+             indi_char[(indi_idx % 4) == 2], indi_char[(indi_idx % 4) == 3]);
     sc2004c_set_line(0);
     sc2004c_print(lcd_line_buf);
 
