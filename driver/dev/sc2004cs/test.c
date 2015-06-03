@@ -6,10 +6,15 @@
 
 #define LINE_LEN 	20
 
-int main(int __attribute__((unused)) argc ,char __attribute__((unused)) *argv[])
+/* int main(int __attribute__((unused)) argc ,char __attribute__((unused)) *argv[]) */
+int main(int argc , char *argv[])
 {
-    uint8_t line;
-    char buf[LINE_LEN+2];	// 2 = { \n, \0 }
+    uint8_t i;
+
+    if (argc < 2) {
+        fprintf(stderr, "USAGE: %s MSG1 [MSG2] [MSG3] [MSG4]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
     sc2004c_gpio_assign_t assign;
     
@@ -23,19 +28,9 @@ int main(int __attribute__((unused)) argc ,char __attribute__((unused)) *argv[])
 
     sc2004c_init(&assign);
 
-    line = 0;
-    while (fgets(buf, sizeof(buf) , stdin) != NULL) {
-        uint8_t i = strlen(buf);
-        if (buf[i-1] == '\n') {
-            i--;
-        }
-        for (; i < (sizeof(buf)-2); i++) {
-            buf[i] = ' ';
-        }
-        buf[sizeof(buf)-2] = '\0';
-
-        sc2004c_print(buf);
-        sc2004c_set_line(++line % 4);
+    for (i = 0; i+1 < argc; i++) {
+        sc2004c_set_line(i);
+        sc2004c_print(argv[i+1]);
     }
     return EXIT_SUCCESS;
 }
