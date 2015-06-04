@@ -135,6 +135,8 @@ static int disp_greeting()
    sc2004c_print("");
    sc2004c_set_line(0);
    sc2004c_print("Initializing...");
+
+   return 0;
 }
 
 static int disp_stat(ina226prc_value_t *measure_hist, uint32_t hist_size)
@@ -170,6 +172,8 @@ static int disp_stat(ina226prc_value_t *measure_hist, uint32_t hist_size)
     sc2004c_print(lcd_line_buf);
 
     indi_idx++;
+
+    return 0;
 }
 
 static int sense_main()
@@ -209,10 +213,8 @@ static int sense_main()
     return EXIT_SUCCESS;
 }
 
-int main(int argc,char *argv[])
+int main(int __attribute__((unused)) argc ,char __attribute__((unused)) *argv[])
 {
-    uint8_t pin_no;
-
     int pid;
 
     rp_gpio_init();
@@ -226,7 +228,6 @@ int main(int argc,char *argv[])
     case 0:
         rp_irq_watch_stat(SWITCH_PIN_NO, getppid());
     default:
-        fprintf(stderr, "B\n");
         sense_main();
         rp_irq_disable(SWITCH_PIN_NO);
     }
