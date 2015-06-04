@@ -1,4 +1,9 @@
 #!/bin/bash
+# Copyright (C) 2015 Tetsuya Kimata <kimata@green-rabbit.net>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, version 2.
 
 PIN_NO_SWITCH=13
 LCD_SCRIPT=~/github/raspberrypi/driver/dev/sc2004cs/sc2004cs.test
@@ -20,7 +25,15 @@ if [ ${SWITCH} = "0" ]; then
     sleep 5
 else
     # OFF
+    sudo ifup wlan0
     sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT"
 fi
 
 sudo ./watt_meter
+
+# Local Variables:
+# coding: shift_jis-unix
+# mode: sh
+# tab-width: 4
+# indent-tabs-mode: nil
+# End:

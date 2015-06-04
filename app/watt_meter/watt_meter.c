@@ -1,3 +1,14 @@
+/*
+ * watt_meter
+ *
+ * Copyright (C) 2015 Tetsuya Kimata <kimata@green-rabbit.net>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, version 2.
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -114,6 +125,18 @@ static void calc_stat(ina226prc_value_t *measure_hist, uint32_t hist_size,
     measure_ave->power /= hist_size;
 }
 
+static int disp_greeting()
+{
+   sc2004c_set_line(3);
+   sc2004c_print("");
+   sc2004c_set_line(2);
+   sc2004c_print("");
+   sc2004c_set_line(1);
+   sc2004c_print("");
+   sc2004c_set_line(0);
+   sc2004c_print("Initializing...");
+}
+
 static int disp_stat(ina226prc_value_t *measure_hist, uint32_t hist_size)
 {
     static char indi_char[] = { ' ', '.' };
@@ -160,6 +183,7 @@ static int sense_main()
     rp_gpio_get_input(SWITCH_PIN_NO, &sw_level);
 
     init_dev();
+    disp_greeting();
 
     while (1) {
         int i;
