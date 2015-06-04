@@ -6,7 +6,6 @@
 # published by the Free Software Foundation, version 2.
 CWD=`dirname "${0}"`
 
-sudo ln -sf "${CWD}/conf/interfaces"	/etc/network/interfaces
 sudo ln -sf "${CWD}/conf/hostapd.conf"	/etc/hostapd/hostapd.conf
 sudo ln -sf "${CWD}/conf/dhcpd.conf"	/etc/dhcp/dhcpd.conf
 

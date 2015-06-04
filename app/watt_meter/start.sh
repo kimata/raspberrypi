@@ -18,15 +18,18 @@ SSID="rasp-meter"
 
 if [ ${SWITCH} = "0" ]; then
     # ON
-    sudo ifdown wlan0
-    sudo ip addr add 192.168.4.1/24 dev wlan0
+    echo "MODE: STAND ALONE"
+    sudo /usr/sbin/hostapd /etc/hostapd/hostapd.conf &
     sleep 1
-    sudo /usr/sbin/hostapd /etc/hostapd/hostapd.conf
-    sudo /usr/sbin/dhcpd -cf /etc/dhcp/dhcpd.conf -f
+    sudo ip addr add 192.168.4.1/24 dev wlan0
+    sudo /usr/sbin/dhcpd -cf /etc/dhcp/dhcpd.conf -f wlan0 &
     sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: STAND ALONE" "SSID: ${SSID}" "IP: ${IP_ADDR}"
 else
     # OFF
-    sudo ifup wlan0
+    echo "MODE: WIFI CLIENT"
+    sudo wpa_supplicant -B -iwlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf -Dnl80211
+    sleep 1
+    sudo dhclient wlan0
     sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "IP: $(hostname -I | cut -d ' ' -f1)"
 fi
 sleep 5

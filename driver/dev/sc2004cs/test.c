@@ -6,7 +6,6 @@
 
 #define LINE_LEN 	20
 
-/* int main(int __attribute__((unused)) argc ,char __attribute__((unused)) *argv[]) */
 int main(int argc , char *argv[])
 {
     uint8_t i;
