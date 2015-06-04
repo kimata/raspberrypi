@@ -26,7 +26,7 @@ if [ ${SWITCH} = "0" ]; then
 else
     # OFF
     sudo ifup wlan0
-    sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "http://$(hostname -i)/"
+    sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "http://$(hostname -I | cut -d ' ' -f1)/"
 fi
 sleep 5
 sudo ${CWD}/watt_meter
