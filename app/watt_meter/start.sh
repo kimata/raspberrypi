@@ -23,13 +23,12 @@ if [ ${SWITCH} = "0" ]; then
     sudo /usr/sbin/hostapd /etc/hostapd/hostapd.conf > /dev/null 2>&1 &
     sudo /usr/sbin/dhcpd -cf /etc/dhcp/dhcpd.conf -f > /dev/null 2>&1 &
     sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: STAND ALONE" "SSID: ${SSID}" "http://${IP_ADDR}/"
-    sleep 5
 else
     # OFF
     sudo ifup wlan0
     sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "http://$(hostname -i)/"
 fi
-
+sleep 5
 sudo ${CWD}/watt_meter
 
 # Local Variables:
