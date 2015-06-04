@@ -18,15 +18,16 @@ SSID="rasp-meter"
 
 if [ ${SWITCH} = "0" ]; then
     # ON
-    sudo ip addr add 192.168.4.1/24 dev wlan0 > /dev/null 2>&1
+    sudo ifdown wlan0
+    sudo ip addr add 192.168.4.1/24 dev wlan0
     sleep 1
-    sudo /usr/sbin/hostapd /etc/hostapd/hostapd.conf > /dev/null 2>&1 &
-    sudo /usr/sbin/dhcpd -cf /etc/dhcp/dhcpd.conf -f > /dev/null 2>&1 &
-    sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: STAND ALONE" "SSID: ${SSID}" "http://${IP_ADDR}/"
+    sudo /usr/sbin/hostapd /etc/hostapd/hostapd.conf
+    sudo /usr/sbin/dhcpd -cf /etc/dhcp/dhcpd.conf -f
+    sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: STAND ALONE" "SSID: ${SSID}" "IP: ${IP_ADDR}"
 else
     # OFF
     sudo ifup wlan0
-    sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "http://$(hostname -I | cut -d ' ' -f1)/"
+    sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "IP: $(hostname -I | cut -d ' ' -f1)"
 fi
 sleep 5
 sudo ${CWD}/watt_meter
