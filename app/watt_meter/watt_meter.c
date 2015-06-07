@@ -45,7 +45,7 @@
 #define LCD_D6_PIN_NO       25
 #define LCD_D7_PIN_NO       26
 
-#define SENSE_RETRY         4
+#define SENSE_RETRY         5
 
 #define LCD_LINE_LEN        20
 
@@ -315,7 +315,7 @@ static int sense_main()
         temp = -FLT_MAX;
         for (j = 0; j < SENSE_RETRY; j++) {
             if (adt7410_sense(DEV_ADDR_ADT7410, &temp) == 0) {
-                if (temp == temp_prev) {
+                if (fabs(temp - temp_prev) < 10) {
                     break;
                 }
                 temp_prev = temp;
