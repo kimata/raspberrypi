@@ -94,10 +94,10 @@ void rp_gpio_set_output(uint8_t pin_no, rp_gpio_level_t level)
     }
 }
 
-void rp_gpio_set_output_bits(uint32_t level_bits)
+void rp_gpio_set_output_bits(uint32_t level_map, uint32_t mask)
 {
-    gpio_reg[10] = (~level_bits) & 0x0FFFFFFF;
-    gpio_reg[7] = level_bits & 0x0FFFFFFF;
+    gpio_reg[10] = ~level_map & mask;
+    gpio_reg[7] = level_map & mask;
 }
 
 // Local Variables:

@@ -18,7 +18,12 @@
 #define ADT7410_REG_STAT	0x02
 #define ADT7410_REG_CONF	0x03
 
-int adt7410_init(uint8_t dev_addr);
+typedef enum {
+    ADT7410_RES_13BIT       = 0 << 7,
+    ADT7410_RES_16BIT       = 1 << 7,
+} adt7410_mode_t;
+
+int adt7410_init(uint8_t dev_addr, adt7410_mode_t mode);
 int adt7410_sense(uint8_t dev_addr, float *value);
 
 #endif

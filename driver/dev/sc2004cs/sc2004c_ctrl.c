@@ -24,6 +24,7 @@
 #define  DB7        (1 << 3)
 
 static sc2004c_gpio_assign_t setting;
+static uint32_t              gpio_mask;
 
 void sc2004c_wait(struct timespec *time)
 {
@@ -46,9 +47,9 @@ void sc2004c_exec_cmd4(uint8_t rs, uint8_t code, bool is_wait)
         (((code >> 2) & 0x1 ) << setting.d6) | 
         (((code >> 3) & 0x1 ) << setting.d7);
 
-    rp_gpio_set_output_bits((1 << setting.en) | cmd);
+    rp_gpio_set_output_bits((1 << setting.en) | cmd, gpio_mask);
     sc2004c_wait(&setup_time);
-    rp_gpio_set_output_bits(cmd);
+    rp_gpio_set_output_bits(cmd, gpio_mask);
     sc2004c_wait(&hold_time);
 
     if (is_wait) {
@@ -74,9 +75,12 @@ void sc2004c_init(sc2004c_gpio_assign_t *assign)
     struct timespec clear_wait_time = { 0, (long)(1.53 * 1E6) };    // 1.53ms
 
     setting = *assign;
+    gpio_mask = (0x1 << setting.rs) | (0x1 << setting.en) |
+        (0x1 << setting.d4) | (0x1 << setting.d5) |
+        (0x1 << setting.d6) | (0x1 << setting.d7);
 
     rp_gpio_init();
-    rp_gpio_set_output_bits(0);
+    rp_gpio_set_output_bits(0, gpio_mask);
 
     rp_gpio_set_mode(setting.rs, RP_GPIO_OUTPUT);
     rp_gpio_set_mode(setting.en, RP_GPIO_OUTPUT);

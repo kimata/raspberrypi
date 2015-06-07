@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     dev_addr = strtol(argv[1], &err_char, 0);
 
-    if (adt7410_init(dev_addr) != 0) {
+    if (adt7410_init(dev_addr, ADT7410_RES_16BIT) != 0) {
         return EXIT_FAILURE;
     }
 

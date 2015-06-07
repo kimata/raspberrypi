@@ -11,13 +11,14 @@ APP_SRCS        := watt_meter.c
 
 DEP_LIB_PATH    := ../../driver
 DEP_LIBS	:= $(DEP_LIB_PATH)/dev/sc2004cs/libsc2004c_ctrl.a \
-		   $(DEP_LIB_PATH)/dev/ina226prc/libina226prc_ctrl.a\
+		   $(DEP_LIB_PATH)/dev/ina226prc/libina226prc_ctrl.a \
+		   $(DEP_LIB_PATH)/dev/adt7410/libadt7410_ctrl.a \
 		   $(DEP_LIB_PATH)/common/i2c/librp_i2c.a $(DEP_LIB_PATH)/common/i2c_ioctl/librp_i2c_ioctl.a \
 		   $(DEP_LIB_PATH)/common/interrupt/librp_irq.a $(DEP_LIB_PATH)/common/gpio/librp_gpio.a
 
 INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIBS)))
-CFLAGS 		:= -Wall -Wextra -std=c99 -O3 -fPIC -pipe
-LDFLAGS 	:= -Wall
+CFLAGS 		:= -Wall -Wextra -std=gnu99 -O3 -fPIC -pipe
+LDFLAGS 	:= -Wall -lrt
 
 app: $(APP)
 
