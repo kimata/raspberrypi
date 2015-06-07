@@ -300,7 +300,6 @@ static int sense_main()
         uint32_t i;
         uint32_t j;
         float temp;
-        float temp_prev;
 
         i = 0;
         while (i < DISP_INTERVAL) {
@@ -311,14 +310,10 @@ static int sense_main()
             }
             measure_hist[i++] = measured_val;
         }
-        temp_prev = -FLT_MAX;
-        temp = -FLT_MAX;
+
         for (j = 0; j < SENSE_RETRY; j++) {
             if (adt7410_sense(DEV_ADDR_ADT7410, &temp) == 0) {
-                if (fabs(temp - temp_prev) < 10) {
-                    break;
-                }
-                temp_prev = temp;
+                break;
             }
         }
 
