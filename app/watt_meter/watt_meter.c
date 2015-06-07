@@ -313,7 +313,12 @@ static int sense_main()
 
         for (j = 0; j < SENSE_RETRY; j++) {
             if (adt7410_sense(DEV_ADDR_ADT7410, &temp) == 0) {
-                break;
+                // NOTE: temporary hack
+                // Sometimes ADT7410 returns 0.1 degree. To ignore it, check the value.
+                // (assumption: actual temperature is higher than 1 degree)
+                if (fabs(temp) > 1) {
+                    break;
+                }
             }
         }
 

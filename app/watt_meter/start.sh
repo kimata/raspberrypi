@@ -31,6 +31,7 @@ else
     sleep 1
     sudo dhclient wlan0
     sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "IP: $(hostname -I | cut -d ' ' -f1)"
+    echo sudo ${LCD_SCRIPT} "Power Meter v ${VERSION}" "MODE: WIFI CLIENT" "" "IP: $(hostname -I | cut -d ' ' -f1)"
 fi
 sleep 5
 sudo ${CWD}/watt_meter
