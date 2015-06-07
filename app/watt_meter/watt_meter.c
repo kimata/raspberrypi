@@ -17,6 +17,7 @@
 #include <signal.h>
 #include <float.h>
 #include <time.h>
+#include <math.h>
 #include <limits.h>
 #include <dirent.h>
 #include <sys/types.h>
@@ -45,7 +46,7 @@
 #define LCD_D6_PIN_NO       25
 #define LCD_D7_PIN_NO       26
 
-#define SENSE_RETRY         5
+#define SENSE_RETRY         2
 
 #define LCD_LINE_LEN        20
 
@@ -260,15 +261,16 @@ static int disp_data(ina226prc_value_t *measure_hist, uint32_t hist_size,
                  log_info->log_no, min, sec);
 
         if (temp != -FLT_MAX) {
-            fprintf(log_info->log_file, "%d, %.2f, %.2f, %.2f, %.1f\n",
+            fprintf(log_info->log_file, "%d, %.2f, %.2f, %.2f, %.1f, %d\n",
                     elapsed_sec, measure_ave.power, measure_max.power, measure_min.power,
-                    temp);
+                    temp, hist_size);
         } else {
-            fprintf(log_info->log_file, "%d, %.2f, %.2f, %.2f, -\n",
-                    elapsed_sec, measure_ave.power, measure_max.power, measure_min.power);
+            fprintf(log_info->log_file, "%d, %.2f, %.2f, %.2f, -, %d\n",
+                    elapsed_sec, measure_ave.power, measure_max.power, measure_min.power,
+                    hist_size);
         }
     } else {
-        snprintf(lcd_line_buf, sizeof(lcd_line_buf), "LOG : disabled      ");
+        snprintf(lcd_line_buf, sizeof(lcd_line_buf), "LOG : off            ");
     }
     sc2004c_set_line(3);
     sc2004c_print(lcd_line_buf);
@@ -302,6 +304,7 @@ static int sense_main()
         float temp;
 
         i = 0;
+        temp = -FLT_MAX;
         while (i < DISP_INTERVAL) {
             ina226prc_value_t measured_val;
 
@@ -313,12 +316,7 @@ static int sense_main()
 
         for (j = 0; j < SENSE_RETRY; j++) {
             if (adt7410_sense(DEV_ADDR_ADT7410, &temp) == 0) {
-                // NOTE: temporary hack
-                // Sometimes ADT7410 returns 0.1 degree. To ignore it, check the value.
-                // (assumption: actual temperature is higher than 1 degree)
-                if (fabs(temp) > 1) {
-                    break;
-                }
+                break;
             }
         }
 
@@ -332,7 +330,6 @@ static int sense_main()
             } else {
                 if (log_info.log_file != NULL) {
                     fclose(log_info.log_file);
-                    // do something
                     free(log_info.log_file_path);
                 }
                 g_log_enable = 0;
