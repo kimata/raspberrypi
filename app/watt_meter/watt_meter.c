@@ -93,7 +93,7 @@ static int init_ina226prc()
 
     conf.shunt_mohm		= 25; // 25mƒ¶
     conf.mode			= INA226PRC_MODE_BOTH_CONT;
-    conf.average_number	= INA226PRC_AVG_16;
+    conf.average_number	= INA226PRC_AVG_4;
     conf.bus_conv_time	= INA226PRC_CONV_332US;
     conf.shunt_conv_time= INA226PRC_CONV_332US;
 
