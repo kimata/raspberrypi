@@ -14,8 +14,10 @@
 #include <stdio.h>
 #include <endian.h>
 
-#include "rp_i2c_ioctl.h"
 #include "adt7410_ctrl.h"
+
+#include "rp_i2c_ioctl.h"
+#include "rp_i2c.h"
 
 int adt7410_init(uint8_t dev_addr, adt7410_mode_t mode)
 {
@@ -25,6 +27,7 @@ int adt7410_init(uint8_t dev_addr, adt7410_mode_t mode)
 
     conf = mode;
     ret |= rp_i2c_init_ioctl();
+    ret |= rp_i2c_init();
     ret |= rp_i2c_write_ioctl(dev_addr, ADT7410_REG_CONF, (uint8_t *)&conf, sizeof(conf));
     ret |= rp_i2c_read_ioctl(dev_addr, ADT7410_REG_CONF, (uint8_t *)&buf, sizeof(buf));
 
@@ -39,21 +42,18 @@ int adt7410_init(uint8_t dev_addr, adt7410_mode_t mode)
 
 int adt7410_sense(uint8_t dev_addr, float *value)
 {
-    uint16_t buf;
     int16_t val;
     int ret = 0;
 
-    ret = rp_i2c_read_ioctl(dev_addr, ADT7410_REG_TEMP, (uint8_t *)&buf, sizeof(buf));
+    ret = rp_i2c_read16(dev_addr, ADT7410_REG_TEMP, (uint16_t *)&val, 1);
 
     if (ret != 0) {
         return ret;
     }
 
-    val = (int16_t)be16toh(buf);
     if (val & 0x8000) {
         val -= 65536;
     }
-
     *value = val / 128.0;
 
     return ret;

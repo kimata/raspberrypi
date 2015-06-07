@@ -15,7 +15,7 @@ TEST_LIB_PATH   :=
 TEST_LIB	:= 
 
 DEP_LIB_PATH    := ../../common
-DEP_LIBS	:= $(DEP_LIB_PATH)/i2c_ioctl/librp_i2c_ioctl.a
+DEP_LIBS	:= $(DEP_LIB_PATH)/i2c_ioctl/librp_i2c_ioctl.a $(DEP_LIB_PATH)/i2c/librp_i2c.a
 
 INCLUDES        := $(patsubst %,-I %, $(dir $(DEP_LIBS)))
 CFLAGS 		:= -Wall -Wextra -std=c99 -pipe -g -O3
