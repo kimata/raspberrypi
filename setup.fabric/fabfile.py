@@ -69,6 +69,7 @@ def setup():
         setup_ssh()
         setup_package()
         setup_i2c()
+        setup_sysctl()
         setup_wlan()
 
         # rootfs サイズを拡張
@@ -108,6 +109,7 @@ def setup_package():
     with cuisine.mode_sudo():
         cuisine.package_update()
         cuisine.package_upgrade()
+        run('rpi-update')
         cuisine.package_ensure([
                 'gcc',
                 'make',
@@ -149,6 +151,30 @@ def setup_i2c():
             mode='644',
             sudo=True
             )
+
+    # Repeated Start Condition
+    cuisine.file_write(
+        location = '/etc/modprobe.d/i2c.conf',
+        content  = 'options i2c_bcm2708 combined=1\n',
+        mode='644',
+        sudo=True
+        )
+
+# WiFi の有効化
+def setup_sysctl():
+    puts(fabric.colors.green('[Setting sysctl.conf]', True))
+    wifi_config = None
+
+    cuisine.file_write(
+        location = '/etc/sysctl.conf',
+        content  = 'kernel.printk = 3 4 1 3\n'
+                 + 'vm.swappiness=1\n'
+                 + 'vm.min_free_kbytes = 8192\n'
+                 + 'vm.dirty_expire_centisecs = 9000\n'
+                 + 'vm.dirty_writeback_centisecs = 6000\n',
+        mode='600',
+        sudo=True
+        )
 
 # WiFi の有効化
 def setup_wlan():
