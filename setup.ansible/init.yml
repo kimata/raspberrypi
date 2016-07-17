@@ -1,3 +1,11 @@
+# Raspberry Pi の初期設定をするレシピです。
+#
+# wifi_config:
+#   ssid: 「接続するSSID」
+#   psk: 「」
+
+
+
 - hosts: all
   vars_prompt:
     - name: hostname
