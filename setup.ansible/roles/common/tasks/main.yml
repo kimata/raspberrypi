@@ -51,10 +51,14 @@
 
 - name: Setting WiFi - WiFi existence
   stat: path=/sys/class/net/wlan0
+  with_first_found:
+    - files:
+        - ./wifi_config.yml
+    - skip: true
   register: wifi
 
 - name: Setting WiFi - wpa_supplicant
-  when: wifi.stat.exists 
+  when: wifi is defined and wifi.stat.exists 
   template:
     src=wifi/wpa_supplicant.conf.j2 dest=/etc/wpa_supplicant/wpa_supplicant.conf
     owner=root
@@ -62,7 +66,7 @@
     mode=600
 
 - name: Setting Wifi - interfaces
-  when: wifi.stat.exists 
+  when: wifi is defined and wifi.stat.exists 
   lineinfile: >-
     dest='/etc/network/interfaces'
     state=present
@@ -70,7 +74,7 @@
     line='auto wlan0'
 
 - name: Setting Wifi - dhcp
-  when: wifi.stat.exists 
+  when: wifi is defined and wifi.stat.exists 
   # NOTE: Wifi の場合は「ホスト名-wifi」でアクセスできるようにする
   lineinfile: >-
     dest='/etc/dhcp/dhclient.conf'
@@ -78,7 +82,11 @@
     line='interface "wlan0" { send host-name = concat (gethostname(), "-wifi"); }'
 
 - name: Setting Wifi - rc.local
-  when: wifi.stat.exists 
+  when: wifi is defined and wifi.stat.exists 
+  with_first_found:
+    - files:
+        - ./wifi_config.yml2
+    - skip: true
   lineinfile: >-
     dest='/etc/rc.local'
     state=present
