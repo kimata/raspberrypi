@@ -43,6 +43,7 @@
 
 import imp
 import os
+import paramiko
 
 from fabric.api import run, sudo, settings
 from fabric.decorators import task
