@@ -1,0 +1,81 @@
+- name: Rename Hostname
+  lineinfile: >-
+    dest='/etc/hostname'
+    state=present
+    regexp='^\w'
+    line="{{hostname}}"
+- name: Install Packages
+  apt:
+    pkg={{ item }}
+    state=present
+  with_items:
+    - ntp
+
+- name: Generate Locales
+  locale_gen:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - en_US.UTF-8
+    - ja_JP.UTF-8
+
+- name: Install Packages
+  apt:
+    update-cache=yes
+    pkg={{ item }}
+    state=present
+  with_items:
+    - powertop
+    - lsb-release
+
+- name: Setting Sudo
+  template:
+    src=sudo/sudoers.j2 dest=/etc/sudoers
+    owner=root
+    group=root
+    mode=0440
+
+- name: Setting SSHD
+  template:
+    src=ssh/sshd_config.j2 dest=/etc/ssh/sshd_config
+  notify:
+    restart sshd
+
+- name: Setting NTPD client
+  template:
+    src=ntp/ntp.conf.j2 dest=/etc/ntp.conf
+    owner=ntp
+    group=ntp
+  notify:
+    restart ntp
+
+- name: Setting WiFi - WiFi existence
+  stat: path=/sys/class/net/wlan0
+  register: wifi
+
+- name: Setting WiFi - wpa_supplicant
+  when: wifi.stat.exists 
+  template:
+    src=wifi/wpa_supplicant.conf.j2 dest=/etc/wpa_supplicant/wpa_supplicant.conf
+    owner=root
+    group=root
+    mode=600
+
+- name: Setting Wifi - interfaces
+  lineinfile: >-
+    dest='/etc/network/interfaces'
+    state=present
+    insertbefore='allow-hotplug wlan0'
+    line='auto wlan0'
+
+- name: Setting Wifi - dhcp
+  # NOTE: Wifi の場合は「ホスト名-wifi」でアクセスできるようにする
+  lineinfile: >-
+    dest='/etc/dhcp/dhclient.conf'
+    state=present
+    line='interface "wlan0" { send host-name = concat (gethostname(), "-wifi"); }'
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:

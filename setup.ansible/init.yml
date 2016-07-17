@@ -1,0 +1,31 @@
+- hosts: all
+  vars_prompt:
+    - name: hostname
+      prompt: "new hostname"
+      default: "raspberrypi"
+      private: no
+
+  vars_files: 
+    - wifi_config.yml
+
+  become: yes
+
+  roles:
+    - common
+
+  tasks:
+    - name: Install Packages
+      apt:
+        update-cache=yes
+        pkg={{ item }}
+        state=present
+      with_items:
+        - emacs24-nox
+        - tmux
+        - git
+        - zsh
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:
