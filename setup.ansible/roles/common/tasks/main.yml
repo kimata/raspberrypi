@@ -62,6 +62,7 @@
     mode=600
 
 - name: Setting Wifi - interfaces
+  when: wifi.stat.exists 
   lineinfile: >-
     dest='/etc/network/interfaces'
     state=present
@@ -69,11 +70,20 @@
     line='auto wlan0'
 
 - name: Setting Wifi - dhcp
+  when: wifi.stat.exists 
   # NOTE: Wifi の場合は「ホスト名-wifi」でアクセスできるようにする
   lineinfile: >-
     dest='/etc/dhcp/dhclient.conf'
     state=present
     line='interface "wlan0" { send host-name = concat (gethostname(), "-wifi"); }'
+
+- name: Setting Wifi - rc.local
+  when: wifi.stat.exists 
+  lineinfile: >-
+    dest='/etc/rc.local'
+    state=present
+    insertbefore='exit 0'
+    line='dhclient wlan0'
 
 # Local Variables:
 # mode: yaml
