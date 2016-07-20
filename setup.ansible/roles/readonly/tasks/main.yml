@@ -1,0 +1,67 @@
+# /var および /etc を Read Only にするレシピです．
+# unionfs-fuse を使用します．
+# 
+# 元ネタはこちら．
+# PINE64にunionfs-fuseでRead-Onlyな環境を作る
+# http://qiita.com/yutacar/items/163d5937b3e945ff00d4
+
+- name: Install Packages
+  apt:
+    pkg={{ item }}
+    state=present
+  with_items:
+    - unionfs-fuse
+
+- name: Create Script
+  template:
+    src={{ item }}.j2 dest=/usr/local/bin/{{ item }}
+    owner=root
+    group=root
+    mode=0755
+  with_items:
+    - mount_unionfs
+    - rwmount
+    - cporg
+  
+- name: Use FUSE for /etc and /var
+  lineinfile: >-
+    dest='/etc/fstab'
+    state=present
+    insertafter='/dev/mmcblk0p2'
+    line='mount_unionfs   {{ item }}    fuse    defaults                  0       0'
+  with_items:
+    - /etc
+    - /var
+
+- name: Use tmpfs for /tmp
+  lineinfile: >-
+    dest='/etc/fstab'
+    state=present
+    insertafter='/dev/mmcblk0p2'
+    line='tmpfs           {{ item }}    tmpfs   defaults,size=64m,noatime 0       0'
+  with_items:
+    - /tmp
+
+- name: Copy Directory
+  shell:
+    creates={{ item }}_rw
+    cp -a {{ item }} {{ item }}_org
+  with_items:
+    - /etc
+    - /var
+
+- name: Prepare Directory
+  file:
+    path={{ item }}
+    state=directory
+    owner=root
+    group=root
+    mode=0755
+  with_items:
+    - /etc_rw
+    - /var_rw
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:
