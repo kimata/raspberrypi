@@ -1,0 +1,15 @@
+# Raspberry Pi の /etc と /var を Read Only にします．
+#
+# 使い方:
+# $ ansible-playbook -i 'raspberrypi,' --user=pi readonly.yml
+
+- hosts: all
+  become: yes
+
+  roles:
+    - readonly
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:
