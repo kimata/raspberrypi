@@ -1,9 +1,3 @@
-- name: Rename Hostname
-  lineinfile: >-
-    dest='/etc/hostname'
-    state=present
-    regexp='^\w'
-    line="{{hostname}}"
 - name: Install Packages
   apt:
     pkg={{ item }}
@@ -49,12 +43,13 @@
   notify:
     restart ntp
 
+- name: Setting WiFi - WiFi config existence
+  local_action: stat path=wifi_config.yml
+  register: wifi_config_file
+
 - name: Setting WiFi - WiFi existence
   stat: path=/sys/class/net/wlan0
-  with_first_found:
-    - files:
-        - ./wifi_config.yml
-    - skip: true
+  when: wifi_config_file.stat.exists
   register: wifi
 
 - name: Setting WiFi - wpa_supplicant

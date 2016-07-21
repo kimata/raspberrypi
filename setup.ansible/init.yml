@@ -11,12 +11,6 @@
 
 
 - hosts: all
-  vars_prompt:
-    - name: hostname
-      prompt: "new hostname"
-      default: "raspberrypi"
-      private: no
-
   vars_files: 
     - wifi_config.yml
 
@@ -37,6 +31,25 @@
         - git
         - zsh
 
+  pre_tasks:
+    - name: Check Read Only Enabled
+      shell: mount -v | grep 'unionfs-fuse on /etc' warn=no
+      register: readonly_etc
+      failed_when: readonly_etc.rc not in [0, 1]
+
+    - name: writable mount /etc
+      when: readonly_etc.rc == 0 # read only active
+      shell: rwmount
+
+  post_tasks:
+    - name: Check /etc_rw Existence
+      stat: path=/etc_rw
+      register: etc_rw
+
+    - name: Sync /etc
+      when: etc_rw.stat.exists
+      shell: cporg
+ 
 # Local Variables:
 # mode: yaml
 # tab-width: 4
