@@ -1,4 +1,4 @@
-# /var および /etc を Read Only にするレシピです．
+# /var を Read Only にするレシピです．
 # unionfs-fuse を使用します．
 # 
 # 元ネタはこちら．
@@ -23,14 +23,13 @@
     - rwmount
     - cporg
   
-- name: Use FUSE for /etc and /var
+- name: Use FUSE for /var
   lineinfile: >-
     dest='/etc/fstab'
     state=present
     insertafter='/dev/mmcblk0p2'
     line='mount_unionfs   {{ item }}    fuse    defaults                  0       0'
   with_items:
-    - /etc
     - /var
 
 - name: Use tmpfs for /tmp
@@ -47,7 +46,6 @@
     creates={{ item }}_rw
     cp -a {{ item }} {{ item }}_org
   with_items:
-    - /etc
     - /var
 
 - name: Prepare Directory
@@ -58,7 +56,6 @@
     group=root
     mode=0755
   with_items:
-    - /etc_rw
     - /var_rw
 
 # Local Variables:

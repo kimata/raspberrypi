@@ -3,7 +3,12 @@
     pkg={{ item }}
     state=present
   with_items:
+    - powertop
+    - lsb-release
     - ntp
+    - ntpdate
+    - i2c-tools
+    - python-smbus
 
 - name: Generate Locales
   locale_gen:
@@ -13,14 +18,16 @@
     - en_US.UTF-8
     - ja_JP.UTF-8
 
-- name: Install Packages
-  apt:
-    update-cache=yes
-    pkg={{ item }}
-    state=present
+- name: Setting Network - interfaces
+  replace: >-
+    dest='/etc/network/interfaces'
+    regexp='{{ item.regexp }}'
+    replace='{{ item.replace }}'
   with_items:
-    - powertop
-    - lsb-release
+    - regexp: '^iface eth0 inet manual$'
+      replace: 'iface eth0 inet dhcp'
+    - regexp: '^iface wlan0 inet manual$'
+      replace: 'iface wlan0 inet dhcp'
 
 - name: Setting Sudo
   template:
@@ -42,6 +49,20 @@
     group=ntp
   notify:
     restart ntp
+
+- name: Setting ntpdate
+  lineinfile: >-
+    dest='/etc/rc.local'
+    state=present
+    insertbefore='exit 0'
+    line='ntpdate -u ntp.nict.jp'
+
+- name: Setting powertop
+  lineinfile: >-
+    dest='/etc/rc.local'
+    state=present
+    insertbefore='exit 0'
+    line='powertop --auto-tune'
 
 - name: Setting WiFi - WiFi config existence
   local_action: stat path=wifi_config.yml
@@ -74,19 +95,22 @@
   lineinfile: >-
     dest='/etc/dhcp/dhclient.conf'
     state=present
-    line='interface "wlan0" { send host-name = concat (gethostname(), "-wifi"); }'
+    line='interface "wlan0" { send host-name = concat (gethostname(), "-wif"i); }'
 
-- name: Setting Wifi - rc.local
-  when: wifi is defined and wifi.stat.exists 
-  with_first_found:
-    - files:
-        - ./wifi_config.yml2
-    - skip: true
+- name: Enable I2C at 50kHz
   lineinfile: >-
-    dest='/etc/rc.local'
+    dest='/boot/config.txt'
     state=present
-    insertbefore='exit 0'
-    line='dhclient wlan0'
+    line='{{ item }}'
+  with_items:
+    - dtparam=i2c_arm=on
+    - dtparam=i2c_baudrate=50000
+
+- name: Load I2C module
+  lineinfile: >-
+    dest='/etc/modules'
+    state=present
+    line='i2c-dev'
 
 # Local Variables:
 # mode: yaml

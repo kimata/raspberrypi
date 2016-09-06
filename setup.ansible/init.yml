@@ -9,7 +9,6 @@
 #   psk: 「接続する SSID の PSK」
 # ---------------
 
-
 - hosts: all
   vars_files: 
     - wifi_config.yml
@@ -18,39 +17,10 @@
 
   roles:
     - common
+    - user
 
-  tasks:
-    - name: Install Packages
-      apt:
-        update-cache=yes
-        pkg={{ item }}
-        state=present
-      with_items:
-        - emacs24-nox
-        - tmux
-        - git
-        - zsh
-
-  pre_tasks:
-    - name: Check Read Only Enabled
-      shell: mount -v | grep 'unionfs-fuse on /etc' warn=no
-      register: readonly_etc
-      failed_when: readonly_etc.rc not in [0, 1]
-
-    - name: writable mount /etc
-      when: readonly_etc.rc == 0 # read only active
-      shell: rwmount
-
-  post_tasks:
-    - name: Check /etc_rw Existence
-      stat: path=/etc_rw
-      register: etc_rw
-
-    - name: Sync /etc
-      when: etc_rw.stat.exists
-      shell: cporg
- 
 # Local Variables:
 # mode: yaml
 # tab-width: 4
 # End:
+
