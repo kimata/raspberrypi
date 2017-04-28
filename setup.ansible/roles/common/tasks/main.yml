@@ -64,6 +64,13 @@
     insertbefore='exit 0'
     line='powertop --auto-tune'
 
+- name: Setting USB off
+  lineinfile: >-
+    dest='/etc/rc.local'
+    state=present
+    insertbefore='exit 0'
+    line='echo 1 > /sys/devices/platform/soc/3f980000.usb/buspower'
+    
 - name: Setting WiFi - WiFi config existence
   local_action: stat path=wifi_config.yml
   register: wifi_config_file
@@ -95,7 +102,7 @@
   lineinfile: >-
     dest='/etc/dhcp/dhclient.conf'
     state=present
-    line='interface "wlan0" { send host-name = concat (gethostname(), "-wif"i); }'
+    line='interface "wlan0" { send host-name = concat (gethostname(), "-wifi"); }'
 
 - name: Enable I2C at 50kHz
   lineinfile: >-
