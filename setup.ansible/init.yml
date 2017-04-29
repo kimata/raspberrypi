@@ -19,6 +19,29 @@
     - common
     - user
 
+  pre_tasks:
+    - name: Check Read Only Enabled
+      shell: mount -v | grep 'unionfs-fuse on /etc' warn=no
+      register: readonly_etc
+      failed_when: readonly_etc.rc not in [0, 1]
+
+    - name: Check /etc_rw Existence
+      stat: path=/etc_rw
+      register: etc_rw
+
+    - name: writable mount /etc
+      when: readonly_etc.rc == 0 and etc_rw.stat.exists # read only active
+      shell: rwmount
+
+    - name: Copy resolv.conf
+      when: readonly_etc.rc == 0 and etc_rw.stat.exists # read only active
+      copy: src=/etc_rw/resolv.conf dest=/etc/resolv.conf remote_src=yes
+
+  post_tasks:
+    - name: Sync /etc
+      when: etc_rw.stat.exists
+      shell: cporg
+    
 # Local Variables:
 # mode: yaml
 # tab-width: 4

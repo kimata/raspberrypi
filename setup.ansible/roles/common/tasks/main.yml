@@ -69,7 +69,14 @@
     dest='/etc/rc.local'
     state=present
     insertbefore='exit 0'
-    line='echo 1 > /sys/devices/platform/soc/3f980000.usb/buspower'
+    line='echo 0 > /sys/devices/platform/soc/3f980000.usb/buspower'
+
+- name: Setting HDMI off
+  lineinfile: >-
+    dest='/etc/rc.local'
+    state=present
+    insertbefore='exit 0'
+    line='/opt/vc/bin/tvservice --off'
     
 - name: Setting WiFi - WiFi config existence
   local_action: stat path=wifi_config.yml
