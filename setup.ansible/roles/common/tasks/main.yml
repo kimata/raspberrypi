@@ -55,7 +55,7 @@
     dest='/etc/rc.local'
     state=present
     insertbefore='exit 0'
-    line='ntpdate -u ntp.nict.jp'
+    line='ntpdate -bu ntp.nict.jp'
 
 - name: Setting powertop
   lineinfile: >-
