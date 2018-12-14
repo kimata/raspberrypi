@@ -1,23 +1,13 @@
 # Raspberry Pi の初期設定をするレシピです。
 #
-# wpa_passphrase コマンドで生成した SSID および PSK の値を、
-# 下記のフォーマットで wifi_config.yml という名前に保存することで、
-# 無線 LAN の設定が行えます。
-# ---------------
-# wifi_config:
-#   ssid: 「接続する SSID」
-#   psk: 「接続する SSID の PSK」
-# ---------------
-
 - hosts: all
-  vars_files: 
-    - wifi_config.yml
-
   become: yes
 
+  vars:
+    aggr_host: columbia.green-rabbit.net
+
   roles:
-    - common
-    - user
+    - water
 
   pre_tasks:
     - name: Check Read Only Enabled
@@ -32,7 +22,7 @@
     - name: writable mount /etc
       when: readonly_etc.rc == 0 and etc_rw.stat.exists # read only active
       shell: rwmount
-
+      
     # - name: Copy resolv.conf
     #   when: readonly_etc.rc == 0 and etc_rw.stat.exists # read only active
     #   copy: src=/etc_rw/resolv.conf dest=/etc/resolv.conf remote_src=yes
@@ -46,4 +36,3 @@
 # mode: yaml
 # tab-width: 4
 # End:
-

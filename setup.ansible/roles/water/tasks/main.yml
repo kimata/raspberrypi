@@ -1,0 +1,29 @@
+- name: Enable Watchdog
+  lineinfile: >-
+    dest='/boot/config.txt'
+    state=present
+    line='{{ item }}'
+  with_items:
+    - dtparam=watchdog=on
+
+- name: Setting Watchdog
+  lineinfile: >-
+    create=yes
+    dest='/etc/modprobe.d/bcm2835-wdt.conf'
+    state=present
+    line='{{ item }}'
+  with_items:
+    - options bcm2835_wdt heartbeat=30
+
+- name: Setting Heartbeat
+  lineinfile: >-
+    dest='/etc/systemd/system.conf'
+    state=present
+    line='{{ item }}'
+  with_items:
+    - RuntimeWatchdogSec=30
+    
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:

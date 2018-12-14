@@ -3,7 +3,8 @@
     pkg={{ item }}
     state=present
   with_items:
-    - powertop
+    # - powertop
+    - locales
     - lsb-release
     - ntp
     - ntpdate
@@ -18,6 +19,10 @@
     - en_US.UTF-8
     - ja_JP.UTF-8
 
+- name: Setting Timezone
+  timezone:
+    name: Asia/Tokyo
+
 - name: Setting Network - interfaces
   replace: >-
     dest='/etc/network/interfaces'
@@ -28,6 +33,9 @@
       replace: 'iface eth0 inet dhcp'
     - regexp: '^iface wlan0 inet manual$'
       replace: 'iface wlan0 inet dhcp'
+
+- name: Expand Partition
+  command: 'raspi-config nonint do_expand_rootfs'
 
 - name: Setting Sudo
   template:
@@ -54,29 +62,31 @@
   lineinfile: >-
     dest='/etc/rc.local'
     state=present
-    insertbefore='exit 0'
+    regexp='^ntpdate'
     line='ntpdate -bu ntp.nict.jp'
-
-- name: Setting powertop
-  lineinfile: >-
-    dest='/etc/rc.local'
-    state=present
     insertbefore='exit 0'
-    line='powertop --auto-tune'
 
-- name: Setting USB off
-  lineinfile: >-
-    dest='/etc/rc.local'
-    state=present
-    insertbefore='exit 0'
-    line='echo 0 > /sys/devices/platform/soc/3f980000.usb/buspower'
+# - name: Setting powertop
+#   lineinfile: >-
+#     dest='/etc/rc.local'
+#     state=present
+#     line='powertop --auto-tune'
+#     insertbefore='exit 0'
+
+# - name: Setting USB off
+#   lineinfile: >-
+#     dest='/etc/rc.local'
+#     state=present
+#     insertbefore='exit 0'
+#     line='echo 0 > /sys/devices/platform/soc/3f980000.usb/buspower'
 
 - name: Setting HDMI off
   lineinfile: >-
     dest='/etc/rc.local'
     state=present
-    insertbefore='exit 0'
+    regexp='^/opt/vc/bin/tvservice'
     line='/opt/vc/bin/tvservice --off'
+    insertbefore='exit 0'
     
 - name: Setting WiFi - WiFi config existence
   local_action: stat path=wifi_config.yml
@@ -100,7 +110,6 @@
   lineinfile: >-
     dest='/etc/network/interfaces'
     state=present
-    insertbefore='allow-hotplug wlan0'
     line='auto wlan0'
 
 - name: Setting Wifi - dhcp
@@ -111,6 +120,15 @@
     state=present
     line='interface "wlan0" { send host-name = concat (gethostname(), "-wifi"); }'
 
+- name: Setting sysctl
+  template:
+    src=sysctl/sysctl.conf.j2 dest=/etc/sysctl.conf
+    owner=root
+    group=root
+    mode=0644
+  notify:
+    reload sysctl
+    
 - name: Enable I2C at 50kHz
   lineinfile: >-
     dest='/boot/config.txt'
