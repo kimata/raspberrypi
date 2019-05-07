@@ -1,3 +1,23 @@
+- name: Install Packages
+  apt:
+    update-cache=yes
+    pkg={{ item }}
+    state=present
+  with_items:
+    - python3-flask
+    - python3-pip
+    - npm
+
+- name: Install Pythong modules using pip
+  pip: name={{ item }} executable=pip3
+  with_items:
+    - python-crontab
+
+- nme: Install Angular
+  npm:
+    name=@angular/cli
+    global=yes
+
 - name: Enable Watchdog
   lineinfile: >-
     dest='/boot/config.txt'
