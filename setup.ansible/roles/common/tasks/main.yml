@@ -7,9 +7,10 @@
     - locales
     - lsb-release
     - ntp
-    - ntpdate
     - i2c-tools
     - python-smbus
+    - exim4
+    - mailutils
 
 - name: Generate Locales
   locale_gen:
@@ -49,7 +50,7 @@
     src=ssh/sshd_config.j2 dest=/etc/ssh/sshd_config
   notify:
     restart sshd
-
+    
 - name: Setting NTPD client
   template:
     src=ntp/ntp.conf.j2 dest=/etc/ntp.conf
@@ -58,14 +59,6 @@
   notify:
     restart ntp
 
-- name: Setting ntpdate
-  lineinfile: >-
-    dest='/etc/rc.local'
-    state=present
-    regexp='^ntpdate'
-    line='ntpdate -bu ntp.nict.jp'
-    insertbefore='exit 0'
-
 # - name: Setting powertop
 #   lineinfile: >-
 #     dest='/etc/rc.local'
@@ -73,12 +66,13 @@
 #     line='powertop --auto-tune'
 #     insertbefore='exit 0'
 
-# - name: Setting USB off
-#   lineinfile: >-
-#     dest='/etc/rc.local'
-#     state=present
-#     insertbefore='exit 0'
-#     line='echo 0 > /sys/devices/platform/soc/3f980000.usb/buspower'
+- name: Setting USB off
+  lineinfile: >-
+    dest='/etc/rc.local'
+    state=present
+    regexp='^for i in 20980000.usb 3f980000.usb; do'
+    line='for i in 20980000.usb 3f980000.usb; do path="/sys/devices/platform/soc/${i}/buspower"; if [ -e $path ]; then echo 1 > $path; fi; done'
+    insertbefore='exit 0'
 
 - name: Setting HDMI off
   lineinfile: >-
