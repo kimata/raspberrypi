@@ -1,0 +1,59 @@
+# Read-only Root-FS with overlayfs for Raspian
+# source: https://github.com/josepsanzcamp/root-ro
+
+- name: Install Packages
+  apt:
+    pkg={{ item }}
+    state=present
+  with_items:
+    - git
+    - rsync
+    - gawk
+    - busybox
+    - bindfs
+
+- name: Disable swap
+  shell: |
+    dphys-swapfile swapoff
+    dphys-swapfile uninstall
+    update-rc.d dphys-swapfile disable
+    systemctl disable dphys-swapfile
+
+- name: Clone repository
+  git:
+    repo: 'https://github.com/josepsanzcamp/root-ro.git'
+    dest: /home/pi/root-ro
+
+- name: Make initrd.gz
+  shell: |
+    rsync -va /home/pi/root-ro/etc/initramfs-tools/* /etc/initramfs-tools/
+    mkinitramfs -o /boot/initrd.gz
+
+- name: Edit /etc/fstab
+  replace: >-
+    dest='/etc/fstab'
+    regexp='{{ item.regexp }}'
+    replace='{{ item.replace }}'
+  with_items:
+    - regexp:  '^.*/boot           vfat.*$'
+      replace: '/dev/mmcblk0p1  /boot           vfat    defaults          0       2'
+    - regexp:  '^.*/               ext4.*$'
+      replace: '/dev/mmcblk0p2  /               ext4    defaults,noatime  0       1'
+
+- name: Edit /boot/cmdline.txt
+  replace: >-
+    dest='/boot/cmdline.txt'
+    regexp='root=\S+'
+    replace='root=/dev/mmcblk0p2'
+
+- name: Add usage comment
+  lineinfile: >-
+    dest='/boot/config.txt'
+    state=present
+    regexp='# to enable ro-root'
+    line='# to enable ro-root, add "initramfs initrd.gz" at the end.'
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:
