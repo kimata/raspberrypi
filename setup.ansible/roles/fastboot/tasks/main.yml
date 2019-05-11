@@ -1,5 +1,7 @@
-# Read-only Root-FS with overlayfs for Raspian
-# source: https://github.com/josepsanzcamp/root-ro
+# Raspberry Pi の機動を高速化します．
+#
+# Raspberry Pi は無線 LAN でネットワークに接続し，
+# ユーザはそれに対して HTTP や SSH でアクセスすることを前提にしています．
 
 - name: Uninstall packages
   apt:
