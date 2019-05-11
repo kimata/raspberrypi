@@ -1,0 +1,87 @@
+# Read-only Root-FS with overlayfs for Raspian
+# source: https://github.com/josepsanzcamp/root-ro
+
+- name: Uninstall packages
+  apt:
+    pkg: '{{ item }}'
+    state: absent
+    autoremove: yes
+  with_items:
+    - exim4
+    - 'exim4-*'
+    - dphys-swapfile
+    - dbus
+    - plymouth
+    - alsa-utils
+
+- name: Disable services
+  service:
+    name: '{{ item }}'
+    enabled: no
+  with_items:
+    - apt-daily
+    - avahi-daemon
+    - dphys-swapfile
+    - hciuart
+    - keyboard-setup
+    - ntp
+    - raspi-config
+    - triggerhappy
+    - wifi-country
+    - exim4
+    - plymouth
+    - cron
+    - systemd-timesyncd
+    - rpi-display-backlight
+    - raspberrypi-net-mods
+    - sshswitch
+
+- name: Disable serial console
+  replace: >-
+    dest='/boot/cmdline.txt'
+    regexp='console=serial0,115200 console=tty1 '
+    replace=''
+
+- name: Disable device file of input/i2c/spi
+  replace: >-
+    dest='/etc/udev/rules.d/99-com.rules'
+    regexp='^{{ item }}'
+    replace='# {{ item }}'
+  with_items:
+    - 'SUBSYSTEM=="input", GROUP="input", MODE="0660"'
+    - 'SUBSYSTEM=="i2c-dev", GROUP="i2c", MODE="0660"'
+    - 'SUBSYSTEM=="spidev", GROUP="spi", MODE="0660"'
+
+- name: Diable unnecessary operation
+  lineinfile: >-
+    dest='/boot/config.txt'
+    state=present
+    regexp='^{{ item }}'
+    line='{{ item }}'
+  with_items:
+    - 'dtoverlay=pi3-disable-bt'
+    - 'disable_splash=1'
+    - 'boot_delay=0'
+
+- name: Speed up the clocks
+  lineinfile: >-
+    dest='/boot/config.txt'
+    state=present
+    regexp='^{{ item }}'
+    line='{{ item }}'
+  with_items:
+    - 'dtoverlay=sdtweak,overclock_50=100'
+    - 'arm_freq=1000'
+    - 'sdram_freq=500'
+    - 'force_turbo=1'
+
+- name: Settign logind
+  replace: >-
+    dest='/etc/systemd/logind.conf'
+    regexp='^#?NAutoVTs=\d+'
+    replace='NAutoVTs=1'
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:
