@@ -6,9 +6,12 @@
 
 - name: restart rsyslog
   service: name=rsyslog state=restarted
-  
-- name: restart ntp
-  service: name=ntp state=restarted
+
+- name: enable ntp
+  shell: timedatectl set-ntp true
+
+# - name: restart ntp
+#   service: name=ntp state=restarted
   
 - name: restart network
   service: name=networking state=restarted
