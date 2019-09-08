@@ -20,7 +20,7 @@
     - user
 
   pre_tasks:
-    - name: Check Read Only Enabled
+    - name: Check ro-var_etc Enabled
       shell: mount -v | grep 'unionfs-fuse on /etc' warn=no
       register: readonly_etc
       failed_when: readonly_etc.rc not in [0, 1]

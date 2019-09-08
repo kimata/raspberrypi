@@ -5,12 +5,13 @@
 
   vars:
     aggr_host: columbia.green-rabbit.net
+    smtp_host: 192.168.2.2
 
   roles:
     - water
 
   pre_tasks:
-    - name: Check Read Only Enabled
+    - name: Check ro-var_etc Enabled
       shell: mount -v | grep 'unionfs-fuse on /etc' warn=no
       register: readonly_etc
       failed_when: readonly_etc.rc not in [0, 1]
@@ -22,7 +23,7 @@
     - name: writable mount /etc
       when: readonly_etc.rc == 0 and etc_rw.stat.exists # read only active
       shell: rwmount
-      
+
     # - name: Copy resolv.conf
     #   when: readonly_etc.rc == 0 and etc_rw.stat.exists # read only active
     #   copy: src=/etc_rw/resolv.conf dest=/etc/resolv.conf remote_src=yes
