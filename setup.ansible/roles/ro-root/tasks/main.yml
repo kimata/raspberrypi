@@ -50,8 +50,11 @@
   lineinfile: >-
     dest='/boot/config.txt'
     state=present
-    regexp='# to enable ro-root'
-    line='# to enable ro-root, add "initramfs initrd.gz" at the end.'
+    regexp='^{{ item }}'
+    line='{{ item }}'
+  with_items:
+    - '# to enable ro-root, add "initramfs initrd.gz" at the end.'
+    - '# to disable ro-root, mount -o rw,remount /mnt/boot-ro, and then remove "initramfs initrd.gz" from /mnt/boot-ro/config.txt.'
 
 # Local Variables:
 # mode: yaml
