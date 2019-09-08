@@ -1,4 +1,5 @@
-- name: Install Packages
+- name:
+    Install Packages
   apt:
     pkg={{ item }}
     state=present
@@ -6,11 +7,11 @@
     # - powertop
     - locales
     - lsb-release
-    - ntp
     - i2c-tools
     - python-smbus
     - exim4
     - mailutils
+    - prometheus-node-exporter
 
 - name: Generate Locales
   locale_gen:
@@ -50,14 +51,24 @@
     src=ssh/sshd_config.j2 dest=/etc/ssh/sshd_config
   notify:
     restart sshd
-    
-- name: Setting NTPD client
-  template:
-    src=ntp/ntp.conf.j2 dest=/etc/ntp.conf
-    owner=ntp
-    group=ntp
+
+- name: Setting systemd-timesyncd
+  lineinfile: >-
+    dest='/etc/systemd/timesyncd.conf'
+    state=present
+    regexp='NTP='
+    line='NTP=ntp.nict.jp'
+    insertafter='[Time]'
   notify:
-    restart ntp
+    enable ntp
+
+# - name: Setting NTPD client
+#   template:
+#     src=ntp/ntp.conf.j2 dest=/etc/ntp.conf
+#     owner=ntp
+#     group=ntp
+#   notify:
+#     restart ntp
 
 # - name: Setting powertop
 #   lineinfile: >-
@@ -99,15 +110,31 @@
     group=root
     mode=600
 
-- name: Setting Wifi - interfaces
+- name: Setting WiFi - watch
+  when: wifi is defined and wifi.stat.exists
+  template:
+    src=wifi/watch_wifi.zsh dest=/usr/local/bin/watch_wifi.zsh
+    owner=root
+    group=root
+    mode=755
+
+- name: Setting WiFi - watch cron
   when: wifi is defined and wifi.stat.exists 
+  cron:
+    name: "watch wifi connection"
+    minute: "*/2"
+    job: "/usr/local/bin/watch_wifi.zsh > /dev/null"
+    state: present
+
+- name: Setting Wifi - interfaces
+  when: wifi is defined and wifi.stat.exists
   lineinfile: >-
     dest='/etc/network/interfaces'
     state=present
     line='auto wlan0'
 
 - name: Setting Wifi - dhcp
-  when: wifi is defined and wifi.stat.exists 
+  when: wifi is defined and wifi.stat.exists
   # NOTE: Wifi の場合は「ホスト名-wifi」でアクセスできるようにする
   lineinfile: >-
     dest='/etc/dhcp/dhclient.conf'
