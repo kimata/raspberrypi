@@ -2,7 +2,6 @@
 
 COUNT=5
 
-
 function get_gateway_ip {
     for ((i=0; i < 5; i++)); do
 	ip=$(/sbin/ip route | awk '/default/ { print $3 }');
@@ -10,6 +9,7 @@ function get_gateway_ip {
 	    echo $ip
 	    return
 	fi
+    sleep 5
     done
 }
 
