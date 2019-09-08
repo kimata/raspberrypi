@@ -6,6 +6,7 @@
   with_items:
     - python3-flask
     - python3-pip
+    - python3-influxdb
     - npm
 
 - name: Install Pythong modules using pip
@@ -13,7 +14,7 @@
   with_items:
     - python-crontab
 
-- nme: Install Angular
+- name: Install Angular
   npm:
     name=@angular/cli
     global=yes
@@ -41,8 +42,42 @@
     state=present
     line='{{ item }}'
   with_items:
-    - RuntimeWatchdogSec=30
-    
+    - RuntimeWatchdogSec=10
+
+- name: Setting Mail Alias
+  lineinfile: >-
+    dest='/etc/aliases'
+    state=present
+    line='{{ item }}'
+  with_items:
+    - "root: root@dripper.green-rabbit.net"
+  notify:
+    newaliases
+
+- name: Setting Heartbeat
+  lineinfile: >-
+    dest='/etc/systemd/system.conf'
+    state=present
+    line='{{ item }}'
+  with_items:
+    - RuntimeWatchdogSec=10
+
+- name: Setting Exim4
+  replace:
+    path: /etc/exim4/update-exim4.conf.conf
+    regexp: '{{ item.regexp }}'
+    replace: '{{ item.replace }}'
+  with_items:
+    - regexp: dc_eximconfig_configtype='local'
+      replace: dc_eximconfig_configtype='smarthost'
+    - regexp: dc_smarthost=''
+      replace: dc_smarthost='{{ smtp_host }}'
+    - regexp: dc_local_interfaces='127.0.0.1 ; ::1'
+      replace: dc_smarthost=dc_local_interfaces='127.0.0.1'
+  notify:
+    reaload exim4
+
+
 # Local Variables:
 # mode: yaml
 # tab-width: 4
