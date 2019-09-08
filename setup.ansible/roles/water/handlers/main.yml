@@ -1,0 +1,6 @@
+- name: newaliases
+  shell: newaliases
+
+- name: reaload exim4
+  shell: systemctl reload exim4
+
