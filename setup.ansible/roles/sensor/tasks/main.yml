@@ -6,12 +6,30 @@
   with_items:
     - ruby
     - ruby-dev
+    - daemontools
 
 # - name: Set Ruby2.1 default
 #   shell: "{{ item }}"
 #   with_items:
 #     - update-alternatives --install /usr/bin/ruby ruby /usr/bin/ruby2.1 100
 #     - update-alternatives --install /usr/bin/gem gem /usr/bin/gem2.1 200
+
+- name: Enable UART
+  lineinfile: >-
+    dest='/boot/config.txt'
+    state=present
+    line='{{ item }}'
+  with_items:
+    - enable_uart=1
+
+- name: Disable Serial Console
+  replace: >-
+    dest='/boot/cmdline.txt'
+    regexp='{{ item.regexp }}'
+    replace='{{ item.replace }}'
+  with_items:
+    - regexp: 'console=serial0,115200 '
+      replace: ''
 
 - name: Install Fluentd
   gem:
