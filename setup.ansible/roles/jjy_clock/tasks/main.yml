@@ -1,0 +1,18 @@
+- name: Install Packages
+  apt:
+    update-cache=yes
+    pkg={{ item }}
+    state=present
+  with_items:
+    - daemontools
+
+- name: Add crontab Entry
+  lineinfile: >-
+    dest='/etc/crontab'
+    state=present
+    line='0 *     * * *   root    setlock -n /tmp/clock.lock /home/pi/rasp-python/app/jjy_clock/jjy_clock.py'
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:
