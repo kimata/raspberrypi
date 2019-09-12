@@ -4,7 +4,7 @@ COUNT=5
 
 function get_gateway_ip {
     for ((i=0; i < 5; i++)); do
-	ip=$(/sbin/ip route | awk '/default/ { print $3 }');
+	ip=$(/sbin/ip route | awk '/default via / { print $3 }');
 	if [ "$ip" != "" ]; then
 	    echo $ip
 	    return
